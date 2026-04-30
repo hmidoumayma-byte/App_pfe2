@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GestionAbsence{% endblock %} | GestionAbsence</title>
+
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #42699166;
+            --primary-light: #EEF2FF;
+            --primary-dark: #5f46b9;
+            --secondary: #897ec2;
+            --success: #76c6ab;
+            --warning: #3b99b3;
+            --danger: #6878df;
+            --dark: #0F172A;
+            --muted: #0764e6;
+            --border: #E2E8F0;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --sidebar-w: 260px;
+            --topbar-h: 64px;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 24px rgba(79,70,229,.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--dark);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform .3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .sidebar-brand .brand-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -.5px;
+        }
+
+        .sidebar-brand .brand-sub {
+            font-size: .72rem;
+            color: rgba(255,255,255,.45);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-section-title {
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,.3);
+            padding: 20px 24px 6px;
+            font-weight: 600;
+        }
+
+        .nav-link-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 24px;
+            color: rgba(255,255,255,.65);
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 500;
+            border-radius: 0;
+            transition: all .2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link-sidebar:hover {
+            color: #fff;
+            background: rgba(255,255,255,.06);
+        }
+
+        .nav-link-sidebar.active {
+            color: #fff;
+            background: rgba(79,70,229,.25);
+            border-left-color: var(--primary);
+        }
+
+        .nav-link-sidebar i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,.08);
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main-wrapper {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            height: var(--topbar-h);
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .topbar-title {
+            flex: 1;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        .notif-btn {
+            position: relative;
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .notif-btn:hover { background: var(--primary-light); color: var(--primary); }
+
+        .notif-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: var(--danger);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 700;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: .875rem;
+        }
+
+        /* ── CONTENT ── */
+        .content-area {
+            flex: 1;
+            padding: 28px;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: .95rem;
+        }
+
+        /* ── STAT CARDS ── */
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 8px 0 4px;
+        }
+
+        .stat-card .stat-label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .stat-card .stat-trend {
+            font-size: .78rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* ── BADGES ── */
+        .badge-role-admin { background: #EDE9FE; color: #bf59ef; }
+        .badge-role-teacher { background: #E0F2FE; color: #88cbef; }
+        .badge-role-student { background: #DCFCE7; color: #166534; }
+
+        /* ── TABLES ── */
+        .table th {
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--muted);
+            font-weight: 600;
+            background: var(--bg);
+        }
+
+        .table td {
+            font-size: .875rem;
+            vertical-align: middle;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        /* ── PROGRESS ── */
+        .progress {
+            height: 6px;
+            border-radius: 6px;
+            background: var(--border);
+        }
+
+        /* ── ALERTS ── */
+        .alert-ai {
+            background: linear-gradient(135deg, #EEF2FF, #E0F2FE);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius);
+            padding: 16px 20px;
+        }
+
+        /* ── QR CODE ── */
+        .qr-container {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: inline-block;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; }
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeInUp .4s ease forwards; }
+        .fade-in-delay-1 { animation-delay: .1s; opacity: 0; }
+        .fade-in-delay-2 { animation-delay: .2s; opacity: 0; }
+        .fade-in-delay-3 { animation-delay: .3s; opacity: 0; }
+
+        /* Role colors */
+        .bg-primary-soft { background: var(--primary-light); color: var(--primary); }
+        .bg-success-soft { background: #D1FAE5; color: #75e9c8; }
+        .bg-warning-soft { background: #FEF3C7; color: #d36767; }
+        .bg-danger-soft { background: #FEE2E2; color: #e58686; }
+        .bg-info-soft { background: #E0F2FE; color: #78b7d9; }
+
+        .text-primary { color: var(--primary) !important; }
+
+        /* Sidebar role badge */
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-left: 8px;
+        }
+
+        /* Code / mono */
+        .mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- ══════════ SIDEBAR ══════════ -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="d-flex align-items-center gap-2">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,#c28dde,#51909b);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-mortarboard-fill text-white" style="font-size:1.1rem;"></i>
+            </div>
+            <div>
+                <div class="brand-text">Gestion Absence</div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-section-title">Navigation</div>
+
+    <!-- COMMON -->
+    <a href="{% url 'dashboard:home' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class="bi bi-grid-fill"></i> Tableau de bord
+    </a>
+    <a href="{% url 'dashboard:ai_analysis' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'ai_analysis' %}active{% endif %}">
+        <i class="bi bi-robot"></i> Analyse IA
+    </a>
+    <a href="{% url 'notifications:list' %}" class="nav-link-sidebar">
+        <i class="bi bi-bell-fill"></i> Notifications
+        {% with count=request.user.notifications.filter %}
+        <span id="sidebar-notif-count" class="ms-auto badge" style="background:rgba(220, 137, 137, 0.8);font-size:.65rem;"></span>
+        {% endwith %}
+    </a>
+
+    <!-- ROLE-SPECIFIC -->
+    {% if user.is_teacher %}
+    <div class="sidebar-section-title">Enseignant</div>
+    <a href="{% url 'attendance:teacher_modules' %}" class="nav-link-sidebar">
+        <i class="bi bi-book-fill"></i> Mes modules
+    </a>
+    <a href="{% url 'attendance:create_session' %}" class="nav-link-sidebar">
+        <i class="bi bi-plus-circle-fill"></i> Nouvelle séance
+    </a>
+    {% endif %}
+
+    {% if user.is_student %}
+    <div class="sidebar-section-title">Étudiant</div>
+    <a href="{% url 'attendance:student_absences' %}" class="nav-link-sidebar">
+        <i class="bi bi-calendar-x-fill"></i> Mes absences
+    </a>
+    <a href="{% url 'attendance:student_history' %}" class="nav-link-sidebar">
+        <i class="bi bi-clock-history"></i> Historique
+    </a>
+    {% endif %}
+
+    {% if user.is_admin %}
+    <div class="sidebar-section-title">Administration</div>
+    <a href="{% url 'attendance:admin_all_absences' %}" class="nav-link-sidebar">
+        <i class="bi bi-people-fill"></i> Tous les absences
+    </a>
+    <a href="{% url 'attendance:admin_justifications' %}" class="nav-link-sidebar">
+        <i class="bi bi-file-earmark-check-fill"></i> Justifications
+    </a>
+    <a href="/admin/" class="nav-link-sidebar">
+        <i class="bi bi-gear-fill"></i> 
+    </a>
+    {% endif %}
+
+    <div class="sidebar-footer">
+        <a href="{% url 'accounts:profile' %}" class="nav-link-sidebar">
+            <i class="bi bi-person-circle"></i> Mon profil
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="nav-link-sidebar text-danger">
+            <i class="bi bi-box-arrow-right"></i> Déconnexion
+        </a>
+    </div>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main-wrapper">
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <button class="btn btn-sm d-md-none me-2" onclick="document.getElementById('sidebar').classList.toggle('open')">
+            <i class="bi bi-list" style="font-size:1.3rem;"></i>
+        </button>
+        <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+
+        <!-- Notifications -->
+        <a href="{% url 'notifications:list' %}" class="notif-btn text-decoration-none" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="notif-badge" id="notif-count" style="display:none;"></span>
+        </a>
+
+        <!-- User dropdown -->
+        <div class="dropdown">
+            <button class="btn d-flex align-items-center gap-2 p-1 border-0 bg-transparent" data-bs-toggle="dropdown">
+                <div class="avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                <div class="d-none d-md-block text-start">
+                    <div style="font-size:.85rem;font-weight:700;line-height:1.2;">{{ user.get_full_name|default:user.username }}</div>
+                    <div style="font-size:.72rem;color:var(--muted);">{{ user.get_role_display }}</div>
+                </div>
+                <i class="bi bi-chevron-down" style="font-size:.7rem;color:var(--muted);"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius:12px;min-width:180px;">
+                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Profil</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- MESSAGES -->
+    {% if messages %}
+    <div class="px-4 pt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" style="border-radius:10px;font-size:.875rem;">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- CONTENT -->
+    <main class="content-area">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-center py-3" style="font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);">
+       
+    </footer>
+</div>
+{% else %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Fetch unread notifications count
+    async function updateNotifCount() {
+        try {
+            const r = await fetch('{% url "notifications:unread_count" %}');
+            const d = await r.json();
+            const el = document.getElementById('notif-count');
+            const sidebar = document.getElementById('sidebar-notif-count');
+            if (el) {
+                if (d.count > 0) { el.textContent = d.count; el.style.display = 'flex'; }
+                else el.style.display = 'none';
+            }
+            if (sidebar && d.count > 0) sidebar.textContent = d.count;
+        } catch(e) {}
+    }
+    updateNotifCount();
+    setInterval(updateNotifCount, 30000);
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

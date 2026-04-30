@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Analyse IA{% endblock %}
+{% block page_title %}Analyse Intelligente{% endblock %}
+{% block content %}
+<div class="alert-ai mb-4" style="background:linear-gradient(135deg,#EEF2FF,#E0F2FE);border:1px solid #C7D2FE;border-radius:12px;padding:20px;">
+    <div class="d-flex align-items-center gap-3">
+        <div style="font-size:2rem;">🤖</div>
+        <div>
+            <div class="fw-bold">Analyse prédictive de vos absences</div>
+            <div class="text-muted small">Basée sur vos données historiques et les tendances récentes</div>
+        </div>
+    </div>
+</div>
+{% for data in analysis_data %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><strong>{{ data.module.code }}</strong> — {{ data.module.name }}</span>
+        <span class="badge {% if data.risk == 'high' %}bg-danger{% elif data.risk == 'medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+            {% if data.risk == 'high' %}🔴 Risque élevé{% elif data.risk == 'medium' %}🟡 Risque modéré{% else %}🟢 Faible risque{% endif %}
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 mb-3">
+            <div class="col-3 text-center">
+                <div class="fw-bold fs-4 text-primary">{{ data.total }}</div>
+                <div class="text-muted small">Séances</div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="fw-bold fs-4 text-success">{{ data.present }}</div>
+                <div class="text-muted small">Présences</div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="fw-bold fs-4 text-danger">{{ data.absent }}</div>
+                <div class="text-muted small">Absences</div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="fw-bold fs-4 {% if data.future_pct >= 50 %}text-danger{% elif data.future_pct >= 30 %}text-warning{% else %}text-success{% endif %}">{{ data.future_pct }}%</div>
+                <div class="text-muted small">Prédiction finale</div>
+            </div>
+        </div>
+        <div class="mb-2" style="font-size:.8rem;font-weight:600;color:#64748B;">TENDANCE SUR 8 SEMAINES</div>
+        <canvas id="chart_{{ forloop.counter }}" height="50"></canvas>
+        <script>
+        new Chart(document.getElementById('chart_{{ forloop.counter }}'), {
+            type: 'line',
+            data: {
+                labels: ['S-8','S-7','S-6','S-5','S-4','S-3','S-2','S-1'],
+                datasets: [{ label: 'Absences', data: {{ data.weekly|safe }}, borderColor: '{% if data.risk == "high" %}#EF4444{% elif data.risk == "medium" %}#F59E0B{% else %}#10B981{% endif %}', tension: .4, fill: true, backgroundColor: '{% if data.risk == "high" %}rgba(239,68,68,.1){% elif data.risk == "medium" %}rgba(245,158,11,.1){% else %}rgba(16,185,129,.1){% endif %}' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+        </script>
+    </div>
+</div>
+{% empty %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-bar-chart fs-2"></i>
+    <p class="mt-2">Pas encore de données à analyser.</p>
+</div>
+{% endfor %}
+{% endblock %}

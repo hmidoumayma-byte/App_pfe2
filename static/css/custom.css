@@ -1,0 +1,60 @@
+/* GestiAbsence — Custom styles */
+
+/* Sidebar active state override */
+.nav-link-sidebar.active {
+    background: rgba(79, 70, 229, 0.2) !important;
+    border-left: 3px solid #4F46E5 !important;
+    color: #fff !important;
+}
+
+/* Table hover effect */
+.table-hover tbody tr:hover {
+    background-color: rgba(79, 70, 229, 0.03);
+}
+
+/* Card border on hover */
+.card:hover {
+    border-color: rgba(79, 70, 229, 0.2);
+    transition: border-color 0.2s ease;
+}
+
+/* QR Code pulse animation when active */
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.qr-active {
+    animation: pulse-green 2s infinite;
+}
+
+/* Smooth page transitions */
+.content-area {
+    animation: fadeInUp 0.35s ease forwards;
+}
+
+/* Better scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Responsive table text */
+@media (max-width: 576px) {
+    .table td, .table th { font-size: .78rem; padding: 8px 10px; }
+}
+
+/* Loading spinner */
+.spinner-border-sm { width: 1rem; height: 1rem; }
+
+/* Status pill */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+}

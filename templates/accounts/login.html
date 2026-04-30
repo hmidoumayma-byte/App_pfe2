@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion | GestionAbsence</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: #060818;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        /* ══ PARTICLES BACKGROUND ══ */
+        canvas#particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ══ MAIN CARD ══ */
+        .login-card {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 28px;
+            padding: 48px 44px;
+            backdrop-filter: blur(20px);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 32px 80px rgba(0,0,0,0.6),
+                0 0 120px rgba(99,102,241,0.08);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ══ LOGO ══ */
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 36px;
+            animation: slideUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .logo-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, #6366F1 0%, #06B6D4 100%);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 8px 32px rgba(99,102,241,0.5);
+            animation: pulse-logo 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { box-shadow: 0 8px 32px rgba(99,102,241,0.5); }
+            50% { box-shadow: 0 8px 48px rgba(99,102,241,0.8), 0 0 20px rgba(6,182,212,0.3); }
+        }
+
+        .logo-text .app-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+            line-height: 1;
+        }
+
+        .logo-text .app-sub {
+            font-size: .72rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ══ TITLE ══ */
+        .card-title {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            animation: slideUp 0.6s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .card-sub {
+            font-size: .9rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 32px;
+            animation: slideUp 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* ══ ROLE SELECTOR ══ */
+        .role-section {
+            margin-bottom: 24px;
+            animation: slideUp 0.6s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .section-label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 10px;
+        }
+
+        .role-pills {
+            display: flex;
+            gap: 8px;
+        }
+
+        .role-pill {
+            flex: 1;
+            padding: 12px 8px;
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(6,182,212,0.1));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .role-pill:hover::before,
+        .role-pill.active::before { opacity: 1; }
+
+        .role-pill:hover,
+        .role-pill.active {
+            border-color: rgba(99,102,241,0.6);
+            transform: translateY(-2px);
+        }
+
+        .role-pill.active {
+            border-color: #6366F1;
+            box-shadow: 0 0 20px rgba(99,102,241,0.3);
+        }
+
+        .role-pill .p-icon { font-size: 1.4rem; margin-bottom: 4px; position: relative; }
+        .role-pill .p-name {
+            font-size: .78rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            position: relative;
+        }
+        .role-pill.active .p-name { color: #fff; }
+        .role-pill .p-sub {
+            font-size: .65rem;
+            color: rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        /* ══ INPUTS ══ */
+        .input-section {
+            animation: slideUp 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-group-label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group-label a {
+            color: #6366F1;
+            text-decoration: none;
+            font-size: .75rem;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .input-group-label a:hover { color: #818CF8; }
+
+        .input-icon-wrap {
+            position: relative;
+        }
+
+        .input-icon-wrap i.left-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.25);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .custom-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 13px 16px 13px 44px;
+            font-size: .95rem;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .custom-input::placeholder { color: rgba(255,255,255,0.2); }
+
+        .custom-input:focus {
+            border-color: #6366F1;
+            background: rgba(99,102,241,0.08);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15),
+                        0 0 20px rgba(99,102,241,0.1);
+        }
+
+        .custom-input:focus + .left-icon,
+        .input-icon-wrap:focus-within i.left-icon {
+            color: #6366F1;
+        }
+
+        .eye-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.25);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .eye-toggle:hover { color: #6366F1; }
+
+        /* ══ REMEMBER ME ══ */
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            animation: slideUp 0.6s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .custom-checkbox {
+            width: 18px; height: 18px;
+            border-radius: 6px;
+            accent-color: #6366F1;
+            cursor: pointer;
+        }
+
+        .remember-text {
+            font-size: .875rem;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+        }
+
+        /* ══ SUBMIT BUTTON ══ */
+        .btn-connect {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 50%, #4338CA 100%);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-connect::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(99,102,241,0.5),
+                        0 0 0 1px rgba(99,102,241,0.3);
+        }
+
+        .btn-connect:hover::before { opacity: 1; }
+        .btn-connect:active { transform: translateY(0); }
+
+        /* ══ DIVIDER ══ */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            animation: slideUp 0.6s 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .divider span {
+            font-size: .78rem;
+            color: rgba(255,255,255,0.2);
+        }
+
+        /* ══ REGISTER LINK ══ */
+        .register-row {
+            text-align: center;
+            font-size: .9rem;
+            color: rgba(255,255,255,0.35);
+            animation: slideUp 0.6s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .register-row a {
+            color: #818CF8;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+            transition: color 0.2s;
+        }
+
+        .register-row a:hover { color: #6366F1; }
+
+        /* ══ FEATURES STRIP ══ */
+        .features-strip {
+            display: flex;
+            gap: 8px;
+            margin-top: 28px;
+            animation: slideUp 0.6s 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .feat-chip {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 10px 8px;
+            text-align: center;
+            transition: all 0.25s;
+        }
+
+        .feat-chip:hover {
+            background: rgba(99,102,241,0.08);
+            border-color: rgba(99,102,241,0.2);
+            transform: translateY(-2px);
+        }
+
+        .feat-chip .fc-icon { font-size: 1.2rem; margin-bottom: 4px; }
+        .feat-chip .fc-text {
+            font-size: .65rem;
+            color: rgba(255,255,255,0.35);
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* ══ GLOW EFFECT ══ */
+        .glow-top {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .glow-bottom {
+            position: fixed;
+            bottom: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(6,182,212,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            font-size: .85rem;
+            border: none;
+            background: rgba(239,68,68,0.15);
+            color: #FCA5A5;
+            margin-bottom: 16px;
+        }
+
+        .alert-success { background: rgba(16,185,129,0.15); color: #6EE7B7; }
+        .alert-info { background: rgba(99,102,241,0.15); color: #A5B4FC; }
+    </style>
+</head>
+<body>
+
+<!-- Background effects -->
+<canvas id="particles"></canvas>
+<div class="glow-top"></div>
+<div class="glow-bottom"></div>
+
+<!-- ══════════ MAIN CARD ══════════ -->
+<div class="login-card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+        <div class="logo-icon">
+            <i class="bi bi-mortarboard-fill text-white"></i>
+        </div>
+        <div class="logo-text">
+            <div class="app-name"> GestionAbsence</div>
+            <div class="app-sub">  Gestion intelligente des absences </div>
+        </div>
+    </div>
+
+    <!-- Title -->
+    <div class="card-title">Bienvenue</div>
+    <div class="card-sub">Connectez-vous à votre espace personnel</div>
+
+    <!-- Alerts -->
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Role -->
+        <div class="role-section">
+            <div class="section-label">Votre rôle</div>
+            <div class="role-pills">
+                <div class="role-pill {% if form.role.value == 'admin' %}active{% endif %}" onclick="selectRole('admin', this)">
+                    <div class="p-icon">🛡️</div>
+                    <div class="p-name">Admin</div>
+                    <div class="p-sub">Administrateur</div>
+                </div>
+                <div class="role-pill {% if not form.role.value or form.role.value == 'teacher' %}active{% endif %}" onclick="selectRole('teacher', this)">
+                    <div class="p-icon">👨‍🏫</div>
+                    <div class="p-name">Enseignant</div>
+                    <div class="p-sub">Professeur</div>
+                </div>
+                <div class="role-pill {% if form.role.value == 'student' %}active{% endif %}" onclick="selectRole('student', this)">
+                    <div class="p-icon">🎓</div>
+                    <div class="p-name">Étudiant</div>
+                    <div class="p-sub">Étudiant(e)</div>
+                </div>
+            </div>
+            <input type="hidden" name="role" id="roleInput" value="{{ form.role.value|default:'teacher' }}">
+        </div>
+
+        <!-- Inputs -->
+        <div class="input-section">
+            <div class="input-group-custom">
+                <div class="input-group-label">Nom d'utilisateur</div>
+                <div class="input-icon-wrap">
+                    <i class="bi bi-person left-icon"></i>
+                    <input type="text" name="username" class="custom-input"
+                           placeholder="Votre identifiant"
+                           value="{{ form.username.value|default:'' }}" required autofocus>
+                </div>
+            </div>
+
+            <div class="input-group-custom">
+                <div class="input-group-label">
+                    Mot de passe
+                    <a href="{% url 'accounts:forgot_password' %}">Oublié ?</a>
+                </div>
+                <div class="input-icon-wrap">
+                    <i class="bi bi-lock left-icon"></i>
+                    <input type="password" name="password" id="passInput"
+                           class="custom-input" placeholder="Votre mot de passe"
+                           style="padding-right:44px;" required>
+                    <button type="button" class="eye-toggle" onclick="togglePass()">
+                        <i class="bi bi-eye" id="eyeIco"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remember -->
+        <div class="remember-row">
+            <input type="checkbox" name="remember_me" id="remMe" class="custom-checkbox">
+            <label for="remMe" class="remember-text">Se souvenir de moi</label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-connect">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+        </button>
+
+    </form>
+
+    <!-- Divider -->
+    <div class="divider"><span>ou</span></div>
+
+    <!-- Register -->
+    <div class="register-row">
+        Pas encore de compte ?
+        <a href="{% url 'accounts:register' %}">Créer un compte</a>
+    </div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── ROLE SELECTOR ──
+function selectRole(role, el) {
+    document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('roleInput').value = role;
+}
+
+// ── PASSWORD TOGGLE ──
+function togglePass() {
+    const inp = document.getElementById('passInput');
+    const ico = document.getElementById('eyeIco');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.className = 'bi bi-eye-slash';
+    } else {
+        inp.type = 'password';
+        ico.className = 'bi bi-eye';
+    }
+}
+
+// ── PARTICLES ANIMATION ──
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+
+const particles = [];
+const count = 80;
+
+for (let i = 0; i < count; i++) {
+    particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.5 + 0.1,
+    });
+}
+
+function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(99,102,241,${p.opacity})`;
+        ctx.fill();
+
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    });
+
+    // Draw connections
+    particles.forEach((p1, i) => {
+        particles.slice(i + 1).forEach(p2 => {
+            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+            if (dist < 100) {
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = `rgba(99,102,241,${0.08 * (1 - dist / 100)})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+        });
+    });
+
+    requestAnimationFrame(drawParticles);
+}
+
+drawParticles();
+</script>
+</body>
+</html>

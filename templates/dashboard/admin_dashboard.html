@@ -1,0 +1,577 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord Admin{% endblock %}
+{% block page_title %}Tableau de bord — Administrateur{% endblock %}
+
+{% block content %}
+<style>
+/* ══ PALETTE DOUCE PROFESSIONNELLE ══ */
+:root {
+    --slate-blue: #5B7FA6;
+    --soft-teal: #7BAABA;
+    --sage-green: #7A9E7E;
+    --lavender: #8B85B5;
+    --warm-beige: #C4A882;
+    --soft-bg: #F5F6F8;
+    --card-bg: #FFFFFF;
+    --text-dark: #2C3E50;
+    --text-mid: #6B7C8E;
+    --text-light: #A8B5C1;
+    --border: #EDF0F3;
+}
+
+/* ══ STAT CARDS ══ */
+.ds-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.ds-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.09);
+}
+
+.ds-card .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+.ds-card.c1 .top-bar { background: linear-gradient(90deg, #5B7FA6, #7BAABA); }
+.ds-card.c2 .top-bar { background: linear-gradient(90deg, #7A9E7E, #9DC29F); }
+.ds-card.c3 .top-bar { background: linear-gradient(90deg, #C4A882, #D4BC9A); }
+.ds-card.c4r .top-bar { background: linear-gradient(90deg, #B87070, #C98585); }
+.ds-card.c4g .top-bar { background: linear-gradient(90deg, #7A9E7E, #9DC29F); }
+
+.ds-card .card-icon {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 18px;
+}
+.ds-card.c1 .card-icon { background: #EBF1F7; color: #5B7FA6; }
+.ds-card.c2 .card-icon { background: #EEF5EE; color: #7A9E7E; }
+.ds-card.c3 .card-icon { background: #F7F2EC; color: #C4A882; }
+.ds-card.c4r .card-icon { background: #F7EEEE; color: #B87070; }
+.ds-card.c4g .card-icon { background: #EEF5EE; color: #7A9E7E; }
+
+.ds-card .card-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.ds-card.c1 .card-value  { color: #5B7FA6; }
+.ds-card.c2 .card-value  { color: #7A9E7E; }
+.ds-card.c3 .card-value  { color: #C4A882; }
+.ds-card.c4r .card-value { color: #B87070; }
+.ds-card.c4g .card-value { color: #7A9E7E; }
+
+.ds-card .card-label {
+    font-size: .8rem;
+    color: var(--text-mid);
+    font-weight: 500;
+    margin-bottom: 14px;
+}
+
+.ds-card .card-footer {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: .75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.ds-card.c1 .card-footer  { color: #5B7FA6; }
+.ds-card.c2 .card-footer  { color: #7A9E7E; }
+.ds-card.c3 .card-footer  { color: #C4A882; }
+.ds-card.c4r .card-footer { color: #B87070; }
+.ds-card.c4g .card-footer { color: #7A9E7E; }
+
+/* ══ SECTION HEADER ══ */
+.sec-head {
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sec-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+.sec-head .dot {
+    width: 8px; height: 8px;
+    background: #5B7FA6;
+    border-radius: 50%;
+}
+
+/* ══ CHART CARD ══ */
+.main-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.main-card-hd {
+    padding: 20px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.main-card-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.main-card-sub {
+    font-size: .75rem;
+    color: var(--text-light);
+    margin-top: 2px;
+}
+.main-card-body { padding: 16px 24px 24px; }
+
+.btn-ia-soft {
+    background: #5B7FA6;
+    color: #fff !important;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s;
+}
+.btn-ia-soft:hover {
+    background: #4A6E93;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(91,127,166,0.35);
+}
+
+/* ══ RISK PANEL ══ */
+.risk-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+    height: 100%;
+}
+.risk-hd {
+    padding: 18px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: #FAFBFC;
+}
+.risk-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.risk-count-badge {
+    background: #F7EEEE;
+    color: #B87070;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.risk-item-row {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--border);
+}
+.risk-item-row:last-child { border-bottom: none; }
+.risk-item-row:hover { background: #FAFBFF; }
+
+.rav-soft {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+.rav-1 { background: #5B7FA6; }
+.rav-2 { background: #7A9E7E; }
+.rav-3 { background: #8B85B5; }
+.rav-4 { background: #7BAABA; }
+.rav-5 { background: #C4A882; }
+
+.risk-name-soft {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+.risk-meta-soft {
+    font-size: .72rem;
+    color: var(--text-light);
+    margin-top: 1px;
+}
+
+.risk-pct-soft {
+    margin-left: auto;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+.pct-high { background: #F7EEEE; color: #B87070; }
+.pct-med  { background: #F7F2EC; color: #C4A882; }
+
+/* ══ TABLE ══ */
+.table-pro {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.table-pro-hd {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: #FAFBFC;
+}
+.table-pro-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.table-pro-title i { color: #5B7FA6; }
+
+.t-pro { width: 100%; border-collapse: collapse; }
+.t-pro thead tr { background: #FAFBFC; }
+.t-pro thead th {
+    padding: 11px 20px;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.t-pro tbody td {
+    padding: 14px 20px;
+    font-size: .85rem;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.t-pro tbody tr:last-child td { border-bottom: none; }
+.t-pro tbody tr:hover td { background: #FAFBFF; }
+
+.mod-code-soft { font-weight: 700; color: var(--text-dark); }
+.mod-name-soft { font-size: .72rem; color: var(--text-light); margin-top: 2px; }
+
+.time-soft {
+    font-family: 'Courier New', monospace;
+    font-size: .78rem;
+    background: #F0F4F8;
+    padding: 4px 10px;
+    border-radius: 7px;
+    color: #5B7FA6;
+    font-weight: 600;
+}
+
+.type-soft {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: #EBF1F7;
+    color: #5B7FA6;
+}
+
+.qr-on-soft {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: #EEF5EE;
+    color: #7A9E7E;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.qr-off-soft {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: #F5F5F5;
+    color: #C0C8D0;
+}
+</style>
+
+<!-- ══════════ STATS ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Vue d'ensemble</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="ds-card c1">
+            <div class="top-bar"></div>
+            <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="card-value">{{ total_students }}</div>
+            <div class="card-label">Étudiants inscrits</div>
+            <div class="card-footer">
+                <i class="bi bi-arrow-up-right"></i> Tous actifs
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="ds-card c2">
+            <div class="top-bar"></div>
+            <div class="card-icon"><i class="bi bi-person-workspace"></i></div>
+            <div class="card-value">{{ total_teachers }}</div>
+            <div class="card-label">Enseignants actifs</div>
+            <div class="card-footer">
+                <i class="bi bi-check2"></i> En activité
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="ds-card c3">
+            <div class="top-bar"></div>
+            <div class="card-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="card-value">{{ pending_justifications }}</div>
+            <div class="card-label">Justifications en attente</div>
+            <div class="card-footer">
+                {% if pending_justifications > 0 %}
+                <a href="{% url 'attendance:admin_justifications' %}" style="color:#C4A882;text-decoration:none;">
+                    <i class="bi bi-arrow-right-circle"></i> Traiter maintenant
+                </a>
+                {% else %}
+                <i class="bi bi-check2"></i> Aucune en attente
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="ds-card {% if global_absence_rate >= 30 %}c4r{% else %}c4g{% endif %}">
+            <div class="top-bar"></div>
+            <div class="card-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="card-value">{{ global_absence_rate }}%</div>
+            <div class="card-label">Taux d'absence global</div>
+            <div class="card-footer">
+                {% if global_absence_rate >= 30 %}
+                <i class="bi bi-exclamation-triangle"></i> Seuil critique dépassé
+                {% else %}
+                <i class="bi bi-check2-circle"></i> Taux acceptable
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ CHART + RISK ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Analyse & Alertes</div>
+<div class="row g-4 mb-4" style="align-items: stretch;">
+
+    <div class="col-lg-8 d-flex flex-column">
+        <div class="main-card flex-fill">
+            <div class="main-card-hd">
+                <div>
+                    <div class="main-card-title">Absences mensuelles</div>
+                    <div class="main-card-sub">Évolution sur l'année académique en cours</div>
+                </div>
+                <a href="{% url 'dashboard:ai_analysis' %}" class="btn-ia-soft">
+                    <i class="bi bi-robot"></i> Analyse IA
+                </a>
+            </div>
+            <div class="main-card-body">
+                <canvas id="monthlyChart" height="90"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 d-flex flex-column">
+        <div class="risk-card flex-fill" style="max-height:380px;overflow-y:auto;">
+            <div class="risk-hd" style="position:sticky;top:0;z-index:2;">
+                <div class="risk-title">
+                    <i class="bi bi-shield-exclamation" style="color:#B87070;"></i>
+                    Étudiants à risque
+                </div>
+                <span class="risk-count-badge">{{ at_risk_students|length }}</span>
+            </div>
+
+            {% if at_risk_students %}
+                {% for item in at_risk_students %}
+                <a href="{% url 'attendance:admin_student_detail' item.student.id %}" class="risk-item-row">
+                    <div class="rav-soft rav-{% cycle '1' '2' '3' '4' '5' %}">
+                        {{ item.student.user.first_name|first }}{{ item.student.user.last_name|first }}
+                    </div>
+                    <div>
+                        <div class="risk-name-soft">{{ item.student.user.get_full_name }}</div>
+                        <div class="risk-meta-soft">{{ item.absent }} abs / {{ item.total }} séances</div>
+                    </div>
+                    <span class="risk-pct-soft {% if item.percentage >= 50 %}pct-high{% else %}pct-med{% endif %}">
+                        {{ item.percentage }}%
+                    </span>
+                </a>
+                {% endfor %}
+            {% else %}
+            <div style="padding:44px 20px;text-align:center;">
+                <i class="bi bi-check-circle" style="font-size:2.5rem;color:#7A9E7E;display:block;margin-bottom:12px;"></i>
+                <div style="font-size:.875rem;font-weight:600;color:#2C3E50;">Aucun étudiant à risque</div>
+                <div style="font-size:.75rem;color:#A8B5C1;margin-top:4px;">Tous les étudiants sont en règle</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ TABLE ══════════ -->
+<div class="sec-head mb-3" style="margin-top:8px;"><div class="dot"></div>Activité récente</div>
+<div class="table-pro mb-4">
+    <div class="table-pro-hd">
+        <div class="table-pro-title">
+            <i class="bi bi-calendar-event-fill"></i>
+            Séances récentes
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="t-pro">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Enseignant</th>
+                    <th>Date</th>
+                    <th>Horaire</th>
+                    <th>Type</th>
+                    <th>QR Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in recent_sessions %}
+                <tr>
+                    <td>
+                        <div class="mod-code-soft">{{ session.module.code }}</div>
+                        <div class="mod-name-soft">{{ session.module.name|truncatewords:4 }}</div>
+                    </td>
+                    <td style="color:#6B7C8E;font-weight:500;">{{ session.module.teacher.user.get_full_name }}</td>
+                    <td style="color:#6B7C8E;font-size:.83rem;">{{ session.date }}</td>
+                    <td><span class="time-soft">{{ session.start_time|time:"H:i" }} – {{ session.end_time|time:"H:i" }}</span></td>
+                    <td><span class="type-soft">{{ session.get_session_type_display }}</span></td>
+                    <td>
+                        {% if session.is_qr_active %}
+                        <span class="qr-on-soft"><i class="bi bi-qr-code-scan"></i>Actif</span>
+                        {% else %}
+                        <span class="qr-off-soft">Inactif</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:44px;color:#A8B5C1;">
+                        <i class="bi bi-calendar-x" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                        Aucune séance enregistrée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const ctx = document.getElementById('monthlyChart');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ months|safe }},
+        datasets: [{
+            label: 'Absences',
+            data: {{ monthly_data|safe }},
+            backgroundColor: function(context) {
+                const chart = context.chart;
+                const {ctx: c, chartArea} = chart;
+                if (!chartArea) return '#5B7FA6';
+                const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                gradient.addColorStop(0, 'rgba(91,127,166,0.85)');
+                gradient.addColorStop(1, 'rgba(123,170,186,0.35)');
+                return gradient;
+            },
+            borderColor: 'transparent',
+            borderRadius: 10,
+            borderSkipped: false,
+            hoverBackgroundColor: '#4A6E93',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#2C3E50',
+                titleColor: '#A8B5C1',
+                bodyColor: '#fff',
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: false,
+                callbacks: {
+                    label: ctx => `  ${ctx.raw} absences`
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                ticks: { color: '#A8B5C1', font: { size: 11 } },
+                border: { display: false }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#A8B5C1', font: { size: 11 } },
+                border: { display: false }
+            }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+    }
+});
+</script>
+{% endblock %}

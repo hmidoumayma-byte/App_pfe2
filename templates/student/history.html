@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Historique des présences{% endblock %}
+{% block page_title %}Historique complet{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header"><i class="bi bi-clock-history me-2 text-primary"></i>Historique de toutes mes présences</div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Module</th><th>Date</th><th>Type</th><th>Statut</th><th>Heure scan</th></tr></thead>
+            <tbody>
+                {% for att in attendances %}
+                <tr>
+                    <td><strong>{{ att.session.module.code }}</strong><br><small class="text-muted">{{ att.session.module.name }}</small></td>
+                    <td>{{ att.session.date }}</td>
+                    <td><span class="badge bg-primary-soft">{{ att.session.get_session_type_display }}</span></td>
+                    <td>
+                        {% if att.status == 'present' %}<span class="badge bg-success-soft">Présent</span>
+                        {% elif att.status == 'absent' %}<span class="badge bg-danger-soft">Absent</span>
+                        {% elif att.status == 'late' %}<span class="badge bg-warning-soft">Retard</span>
+                        {% elif att.status == 'justified' %}<span class="badge bg-info-soft">Justifié</span>{% endif %}
+                    </td>
+                    <td class="mono" style="font-size:.8rem;">{% if att.scan_time %}{{ att.scan_time|time:"H:i:s" }}{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4 text-muted">Aucune présence enregistrée</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

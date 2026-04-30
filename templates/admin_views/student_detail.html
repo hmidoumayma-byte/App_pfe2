@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Détail étudiant{% endblock %}
+{% block page_title %}Détail — {{ student.user.get_full_name }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <div class="avatar mx-auto mb-3" style="width:64px;height:64px;font-size:1.5rem;border-radius:16px;">{{ student.user.first_name|first }}{{ student.user.last_name|first }}</div>
+                <h5 class="fw-bold mb-1">{{ student.user.get_full_name }}</h5>
+                <div class="text-muted small mb-3 mono">{{ student.student_id }}</div>
+                <table class="table table-sm text-start">
+                    <tr><td class="text-muted">Email</td><td>{{ student.user.email }}</td></tr>
+                    <tr><td class="text-muted">Département</td><td>{{ student.department }}</td></tr>
+                    <tr><td class="text-muted">Année</td><td>{{ student.year_of_study }}ème</td></tr>
+                    <tr><td class="text-muted">Groupe</td><td>{{ student.group|default:"—" }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Historique</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Module</th><th>Date</th><th>Type</th><th>Statut</th><th>Justif.</th></tr></thead>
+                    <tbody>
+                        {% for att in absences %}
+                        <tr>
+                            <td><strong>{{ att.session.module.code }}</strong></td>
+                            <td>{{ att.session.date }}</td>
+                            <td>{{ att.session.get_session_type_display }}</td>
+                            <td>{% if att.status == 'present' %}<span class="badge bg-success-soft">Présent</span>{% elif att.status == 'absent' %}<span class="badge bg-danger-soft">Absent</span>{% elif att.status == 'late' %}<span class="badge bg-warning-soft">Retard</span>{% elif att.status == 'justified' %}<span class="badge bg-info-soft">Justifié</span>{% endif %}</td>
+                            <td>{% if att.justification %}<span class="badge bg-primary-soft">{{ att.justification.get_status_display }}</span>{% else %}—{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">Aucune donnée</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

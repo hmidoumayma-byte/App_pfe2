@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Nouvelle séance{% endblock %}
+{% block page_title %}Créer une séance{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-calendar-plus me-2 text-primary"></i>Nouvelle séance</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#475569;">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger mt-1" style="font-size:.8rem;">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary flex-1"><i class="bi bi-calendar-check me-2"></i>Créer la séance</button>
+                        <a href="{% url 'attendance:teacher_modules' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

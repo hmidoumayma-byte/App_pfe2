@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Mes absences{% endblock %}
+{% block page_title %}Mes absences{% endblock %}
+
+{% block content %}
+<!-- Module Stats -->
+<div class="row g-3 mb-4">
+    {% for stat in module_stats %}
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <div class="fw-bold" style="font-size:.875rem;">{{ stat.module.code }}</div>
+                    <div style="font-size:.78rem;color:#64748B;">{{ stat.module.name }}</div>
+                </div>
+                <span class="badge {% if stat.alert %}bg-danger{% else %}bg-success{% endif %}" style="font-size:.78rem;">{{ stat.percentage }}%</span>
+            </div>
+            <div class="progress mb-1"><div class="progress-bar {% if stat.alert %}bg-danger{% else %}bg-success{% endif %}" style="width:{{ stat.percentage }}%"></div></div>
+            <div style="font-size:.75rem;color:#64748B;">{{ stat.absences }} absences / {{ stat.total_sessions }} séances</div>
+            {% if stat.alert %}<div style="font-size:.72rem;color:#EF4444;margin-top:4px;"><i class="bi bi-exclamation-triangle me-1"></i>Seuil d'alerte dépassé!</div>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Absences Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-x me-2 text-danger"></i>Mes absences et retards</span>
+        <a href="{% url 'attendance:student_history' %}" class="btn btn-sm btn-outline-secondary">Historique complet</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Module</th><th>Date</th><th>Séance</th><th>Statut</th><th>Justification</th></tr></thead>
+            <tbody>
+                {% for att in absences %}
+                <tr>
+                    <td><strong>{{ att.session.module.code }}</strong><br><small class="text-muted">{{ att.session.module.name }}</small></td>
+                    <td>{{ att.session.date }}</td>
+                    <td><span class="badge bg-primary-soft">{{ att.session.get_session_type_display }}</span><br>
+                        <small class="mono text-muted">{{ att.session.start_time|time:"H:i" }}</small></td>
+                    <td>
+                        {% if att.status == 'absent' %}<span class="badge bg-danger-soft">Absent</span>
+                        {% elif att.status == 'late' %}<span class="badge bg-warning-soft">En retard</span>
+                        {% elif att.status == 'justified' %}<span class="badge bg-success-soft">Justifié</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if att.status == 'absent' %}
+                            {% if att.justification %}
+                                {% if att.justification.status == 'pending' %}<span class="badge" style="background:#EEF2FF;color:#4F46E5;">⏳ En attente</span>
+                                {% elif att.justification.status == 'approved' %}<span class="badge bg-success-soft">✅ Approuvée</span>
+                                {% elif att.justification.status == 'rejected' %}<span class="badge bg-danger-soft">❌ Rejetée</span>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'attendance:justify_absence' att.id %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-file-earmark-plus me-1"></i>Justifier
+                                </a>
+                            {% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-5">
+                    <i class="bi bi-emoji-smile text-success fs-2"></i>
+                    <p class="mt-2 text-muted">Aucune absence enregistrée ! Continuez comme ça 🎉</p>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

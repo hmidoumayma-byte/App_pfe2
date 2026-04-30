@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Traiter justification{% endblock %}
+{% block page_title %}Traiter une justification{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-info-circle me-2 text-primary"></i>Détails</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6"><strong>Étudiant:</strong> {{ justification.student.user.get_full_name }}</div>
+                    <div class="col-6"><strong>N° Étudiant:</strong> <span class="mono">{{ justification.student.student_id }}</span></div>
+                    <div class="col-6"><strong>Module:</strong> {{ justification.attendance.session.module.code }}</div>
+                    <div class="col-6"><strong>Date absence:</strong> {{ justification.attendance.session.date }}</div>
+                    <div class="col-12"><strong>Raison:</strong> {{ justification.get_reason_display }}</div>
+                    <div class="col-12"><strong>Description:</strong><div class="p-3 mt-1" style="background:#F8FAFC;border-radius:8px;font-size:.875rem;">{{ justification.description }}</div></div>
+                    {% if justification.document %}<div class="col-12"><strong>Document:</strong> <a href="{{ justification.document.url }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-file-earmark-arrow-down me-1"></i>Télécharger</a></div>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% if justification.status == 'pending' %}
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil me-2 text-primary"></i>Décision</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4"><label class="form-label fw-bold">Commentaire (optionnel)</label><textarea name="admin_comment" class="form-control" rows="3" placeholder="Commentaire..."></textarea></div>
+                    <div class="d-flex gap-3">
+                        <button type="submit" name="action" value="approve" class="btn btn-success flex-1"><i class="bi bi-check-circle me-2"></i>Approuver</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-danger flex-1"><i class="bi bi-x-circle me-2"></i>Rejeter</button>
+                        <a href="{% url 'attendance:admin_justifications' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card"><div class="card-body text-center py-4">
+            {% if justification.status == 'approved' %}<div class="text-success fs-2">✅</div><p class="fw-bold">Approuvée</p>{% else %}<div class="text-danger fs-2">❌</div><p class="fw-bold">Rejetée</p>{% endif %}
+            {% if justification.admin_comment %}<p class="text-muted">{{ justification.admin_comment }}</p>{% endif %}
+            <a href="{% url 'attendance:admin_justifications' %}" class="btn btn-primary">Retour</a>
+        </div></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

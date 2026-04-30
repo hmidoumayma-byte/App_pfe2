@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Séance {{ session.date }}{% endblock %}
+{% block page_title %}Séance — {{ session.module.code }} | {{ session.date }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Session Info + QR -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-info-circle me-2 text-primary"></i>Informations</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><td class="text-muted" style="font-size:.8rem;">Module</td><td><strong>{{ session.module.code }}</strong></td></tr>
+                    <tr><td class="text-muted" style="font-size:.8rem;">Date</td><td>{{ session.date }}</td></tr>
+                    <tr><td class="text-muted" style="font-size:.8rem;">Horaire</td><td class="mono">{{ session.start_time|time:"H:i" }} – {{ session.end_time|time:"H:i" }}</td></tr>
+                    <tr><td class="text-muted" style="font-size:.8rem;">Type</td><td><span class="badge bg-primary-soft">{{ session.get_session_type_display }}</span></td></tr>
+                    <tr><td class="text-muted" style="font-size:.8rem;">Salle</td><td>{{ session.room|default:"Non définie" }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- QR Code Card -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-qr-code-scan me-2 text-primary"></i>QR Code de présence</div>
+            <div class="card-body text-center">
+                {% if session.qr_code and session.is_qr_active %}
+                <div class="qr-container mb-3 d-inline-block">
+                    <img src="{{ session.qr_code.url }}" alt="QR Code" style="width:180px;height:180px;">
+                </div>
+                <div class="alert bg-success-soft border-0 mb-3" style="border-radius:10px;">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                    <strong>QR Code actif</strong>
+                    {% if session.qr_expires_at %}
+                    <br><small class="text-muted">Expire: {{ session.qr_expires_at|date:"H:i" }}</small>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'attendance:deactivate_qr' session.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                        <i class="bi bi-stop-circle me-2"></i>Désactiver le QR
+                    </button>
+                </form>
+                {% elif session.qr_code %}
+                <div class="qr-container mb-3 d-inline-block" style="opacity:.4;">
+                    <img src="{{ session.qr_code.url }}" alt="QR Code" style="width:180px;height:180px;">
+                </div>
+                <div class="alert bg-warning-soft border-0 mb-3" style="border-radius:10px;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>QR Code expiré
+                </div>
+                <form method="post" action="{% url 'attendance:generate_qr' session.pk %}">
+                    {% csrf_token %}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Durée (min)</span>
+                        <input type="number" name="expiry_minutes" value="30" min="5" max="120" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-repeat me-2"></i>Regénérer QR
+                    </button>
+                </form>
+                {% else %}
+                <div class="py-3 text-muted">
+                    <i class="bi bi-qr-code" style="font-size:3rem;opacity:.3;"></i>
+                    <p class="mt-2 mb-3 small">Aucun QR Code généré</p>
+                </div>
+                <form method="post" action="{% url 'attendance:generate_qr' session.pk %}">
+                    {% csrf_token %}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Durée (min)</span>
+                        <input type="number" name="expiry_minutes" value="30" min="5" max="120" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-qr-code me-2"></i>Générer QR Code
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Attendance List -->
+    <div class="col-lg-8">
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-primary">{{ stats.total }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-success">{{ stats.present }}</div>
+                    <div class="stat-label">Présents</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-danger">{{ stats.absent }}</div>
+                    <div class="stat-label">Absents</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-warning">{{ stats.late }}</div>
+                    <div class="stat-label">Retards</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people me-2"></i>Liste des présences</span>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchStudent" class="form-control form-control-sm" placeholder="Rechercher..." style="width:200px;">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Étudiant</th>
+                            <th>N° Étudiant</th>
+                            <th>Heure scan</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attendances %}
+                        <tr id="row-{{ att.id }}" class="student-row">
+                            <td style="font-size:.8rem;color:#94A3B8;">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar" style="width:28px;height:28px;font-size:.7rem;border-radius:7px;">
+                                        {{ att.student.user.first_name|first }}{{ att.student.user.last_name|first }}
+                                    </div>
+                                    <span style="font-size:.875rem;">{{ att.student.user.get_full_name }}</span>
+                                </div>
+                            </td>
+                            <td class="mono" style="font-size:.8rem;">{{ att.student.student_id }}</td>
+                            <td style="font-size:.8rem;">
+                                {% if att.scan_time %}{{ att.scan_time|time:"H:i:s" }}{% else %}—{% endif %}
+                            </td>
+                            <td>
+                                <span id="status-{{ att.id }}" class="badge
+                                    {% if att.status == 'present' %}bg-success-soft
+                                    {% elif att.status == 'absent' %}bg-danger-soft
+                                    {% elif att.status == 'late' %}bg-warning-soft
+                                    {% elif att.status == 'justified' %}bg-primary-soft
+                                    {% endif %}">
+                                    {{ att.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button onclick="markStatus({{ att.id }}, {{ att.student.id }}, 'present')" class="btn btn-outline-success" title="Présent"><i class="bi bi-check"></i></button>
+                                    <button onclick="markStatus({{ att.id }}, {{ att.student.id }}, 'absent')" class="btn btn-outline-danger" title="Absent"><i class="bi bi-x"></i></button>
+                                    <button onclick="markStatus({{ att.id }}, {{ att.student.id }}, 'late')" class="btn btn-outline-warning" title="Retard"><i class="bi bi-clock"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Aucun étudiant inscrit pour ce module</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search filter
+document.getElementById('searchStudent').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.student-row').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+// Mark status via AJAX
+function markStatus(attendanceId, studentId, status) {
+    const formData = new FormData();
+    formData.append('student_id', studentId);
+    formData.append('status', status);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('{% url "attendance:mark_attendance" session.pk %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById('status-' + attendanceId);
+            if (badge) {
+                const classes = { present: 'bg-success-soft', absent: 'bg-danger-soft', late: 'bg-warning-soft' };
+                badge.className = 'badge ' + (classes[status] || 'bg-secondary');
+                badge.textContent = data.status;
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

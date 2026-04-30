@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Absences — {{ module.code }}{% endblock %}
+{% block page_title %}Absences — {{ module.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="badge bg-primary-soft mono me-2">{{ module.code }}</span>
+        <span class="text-muted small">{{ total_sessions }} séances au total</span>
+    </div>
+    <a href="{% url 'attendance:create_session_for_module' module.id %}" class="btn btn-primary btn-sm">+ Séance</a>
+</div>
+<div class="card">
+    <div class="card-header"><i class="bi bi-people me-2"></i>Taux d'absence par étudiant</div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Étudiant</th><th>N° Étudiant</th><th>Présences</th><th>Absences</th><th>Taux</th><th>Statut</th></tr></thead>
+            <tbody>
+                {% for item in student_stats %}
+                <tr>
+                    <td><strong>{{ item.student.user.get_full_name }}</strong></td>
+                    <td class="mono" style="font-size:.8rem;">{{ item.student.student_id }}</td>
+                    <td>{{ item.presents }}</td>
+                    <td>{{ item.absences }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-1" style="min-width:60px;"><div class="progress-bar {% if item.is_critical %}bg-danger{% elif item.is_at_risk %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ item.percentage }}%"></div></div>
+                            <span class="badge {% if item.is_critical %}bg-danger-soft{% elif item.is_at_risk %}bg-warning-soft{% else %}bg-success-soft{% endif %}">{{ item.percentage }}%</span>
+                        </div>
+                    </td>
+                    <td>{% if item.is_critical %}<span class="badge bg-danger-soft">🔴 Critique</span>{% elif item.is_at_risk %}<span class="badge bg-warning-soft">⚠️ À risque</span>{% else %}<span class="badge bg-success-soft">✅ Normal</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">Aucun étudiant inscrit</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

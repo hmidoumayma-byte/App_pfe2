@@ -1,0 +1,727 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord Étudiant{% endblock %}
+{% block page_title %}Mon espace étudiant{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --slate-blue: #5B7FA6;
+    --soft-teal: #7BAABA;
+    --sage-green: #7A9E7E;
+    --lavender: #8B85B5;
+    --warm-beige: #C4A882;
+    --soft-red: #B87070;
+    --text-dark: #2C3E50;
+    --text-mid: #6B7C8E;
+    --text-light: #A8B5C1;
+    --border: #EDF0F3;
+    --card-bg: #FFFFFF;
+}
+
+/* ══ STAT CARDS ══ */
+.st-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 22px 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.st-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.09);
+}
+.st-card .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+.st-card.sg .top-bar { background: linear-gradient(90deg, #7A9E7E, #9DC29F); }
+.st-card.sb .top-bar { background: linear-gradient(90deg, #5B7FA6, #7BAABA); }
+.st-card.sr .top-bar { background: linear-gradient(90deg, #B87070, #C98585); }
+.st-card.sl .top-bar { background: linear-gradient(90deg, #8B85B5, #A8A2CC); }
+
+.st-card .st-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+}
+.st-card.sg .st-icon { background: #EEF5EE; color: #7A9E7E; }
+.st-card.sb .st-icon { background: #EBF1F7; color: #5B7FA6; }
+.st-card.sr .st-icon { background: #F7EEEE; color: #B87070; }
+.st-card.sl .st-icon { background: #F0EFF8; color: #8B85B5; }
+
+.st-card .st-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+.st-card.sg .st-value { color: #7A9E7E; }
+.st-card.sb .st-value { color: #5B7FA6; }
+.st-card.sr .st-value { color: #B87070; }
+.st-card.sl .st-value { color: #8B85B5; }
+
+.st-card .st-label {
+    font-size: .78rem;
+    color: var(--text-mid);
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+.st-card .st-progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.st-card .st-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+.st-card.sg .st-progress-bar { background: #7A9E7E; }
+.st-card.sb .st-progress-bar { background: #5B7FA6; }
+.st-card.sr .st-progress-bar { background: #B87070; }
+.st-card.sl .st-progress-bar { background: #8B85B5; }
+
+/* ══ SECTION HEADER ══ */
+.sec-head {
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sec-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+.sec-head .dot {
+    width: 8px; height: 8px;
+    background: #5B7FA6;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ══ QR SCANNER CARD ══ */
+.qr-card {
+    background: linear-gradient(135deg, #EBF1F7 0%, #EEF5EE 100%);
+    border-radius: 16px;
+    border: 1px solid #D8E6F0;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+.qr-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.qr-icon-box {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #5B7FA6, #7BAABA);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(91,127,166,0.3);
+}
+.qr-text-title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.qr-text-sub {
+    font-size: .78rem;
+    color: var(--text-mid);
+    margin-top: 2px;
+}
+.btn-qr {
+    background: #5B7FA6;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-qr:hover {
+    background: #4A6E93;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(91,127,166,0.35);
+}
+.btn-qr:disabled {
+    background: #A8B5C1;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ══ CAMERA ZONE ══ */
+#cameraZone {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #D8E6F0;
+}
+
+/* ══ AI PREDICTIONS ══ */
+.pred-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.2s;
+}
+.pred-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+.pred-card.warn { border-left: 4px solid #C4A882; }
+.pred-card.critical { border-left: 4px solid #B87070; }
+.pred-card.info { border-left: 4px solid #5B7FA6; }
+
+.pred-module { font-size: .88rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+.pred-msg { font-size: .8rem; color: var(--text-mid); margin-bottom: 6px; line-height: 1.5; }
+.pred-rec { font-size: .75rem; color: #5B7FA6; font-weight: 600; margin-bottom: 6px; }
+
+.trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: .7rem;
+    font-weight: 600;
+}
+.trend-up { background: #F7EEEE; color: #B87070; }
+.trend-dn { background: #EEF5EE; color: #7A9E7E; }
+
+/* ══ CHART + MODULE DETAIL ══ */
+.pro-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.pro-card-hd {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FAFBFC;
+}
+.pro-card-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pro-card-title i { color: #5B7FA6; }
+.pro-card-body { padding: 20px 22px; }
+
+/* ══ MODULE DETAIL ROWS ══ */
+.mod-row {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.mod-row:last-child { border-bottom: none; }
+
+.mod-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.mod-code-d { font-size: .9rem; font-weight: 700; color: var(--text-dark); }
+.mod-sub-d { font-size: .73rem; color: var(--text-light); margin-top: 1px; }
+
+.mod-pct {
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+.pct-ok   { background: #EEF5EE; color: #7A9E7E; }
+.pct-warn { background: #F7F2EC; color: #C4A882; }
+.pct-bad  { background: #F7EEEE; color: #B87070; }
+
+.mod-progress {
+    height: 5px;
+    background: var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+}
+.mod-progress-bar { height: 100%; border-radius: 5px; transition: width 1s ease; }
+.mpb-ok   { background: #7A9E7E; }
+.mpb-warn { background: #C4A882; }
+.mpb-bad  { background: #B87070; }
+
+.alert-text {
+    font-size: .72rem;
+    color: #B87070;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ══ ABSENCES TABLE ══ */
+.abs-table-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.abs-table-hd {
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: #FAFBFC;
+}
+.abs-table-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.abs-table-title i { color: #5B7FA6; }
+
+.abs-table { width: 100%; border-collapse: collapse; }
+.abs-table thead tr { background: #FAFBFC; }
+.abs-table thead th {
+    padding: 11px 20px;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+}
+.abs-table tbody td {
+    padding: 14px 20px;
+    font-size: .85rem;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.abs-table tbody tr:last-child td { border-bottom: none; }
+.abs-table tbody tr:hover td { background: #FAFBFF; }
+
+.st-absent   { background: #F7EEEE; color: #B87070; padding: 4px 10px; border-radius: 7px; font-size: .75rem; font-weight: 600; }
+.st-late     { background: #F7F2EC; color: #C4A882; padding: 4px 10px; border-radius: 7px; font-size: .75rem; font-weight: 600; }
+.st-justif   { background: #EEF5EE; color: #7A9E7E; padding: 4px 10px; border-radius: 7px; font-size: .75rem; font-weight: 600; }
+
+.btn-justif {
+    background: #F7F2EC;
+    color: #C4A882;
+    border: 1px solid #E8D9C4;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: .75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-justif:hover { background: #C4A882; color: #fff; }
+
+.pending-badge {
+    background: #EBF1F7;
+    color: #5B7FA6;
+    padding: 4px 10px;
+    border-radius: 7px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.btn-soft-outline {
+    background: transparent;
+    color: #5B7FA6;
+    border: 1px solid #D8E6F0;
+    border-radius: 9px;
+    padding: 7px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-soft-outline:hover { background: #EBF1F7; color: #5B7FA6; }
+
+.btn-soft-filled {
+    background: #5B7FA6;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 7px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-soft-filled:hover { background: #4A6E93; color: #fff; }
+</style>
+
+<!-- ══════════ STATS ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Résumé de présence</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="st-card sg">
+            <div class="top-bar"></div>
+            <div class="st-icon"><i class="bi bi-check2-circle"></i></div>
+            <div class="st-value">{{ global_rate }}%</div>
+            <div class="st-label">Taux de présence</div>
+            <div class="st-progress"><div class="st-progress-bar" style="width:{{ global_rate }}%"></div></div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="st-card sb">
+            <div class="top-bar"></div>
+            <div class="st-icon"><i class="bi bi-person-check-fill"></i></div>
+            <div class="st-value">{{ present_att }}</div>
+            <div class="st-label">Présences enregistrées</div>
+            <div class="st-progress"><div class="st-progress-bar" style="width:{% if total_att > 0 %}{% widthratio present_att total_att 100 %}{% else %}0{% endif %}%"></div></div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="st-card sr">
+            <div class="top-bar"></div>
+            <div class="st-icon"><i class="bi bi-person-x-fill"></i></div>
+            <div class="st-value">{{ absent_att }}</div>
+            <div class="st-label">Absences totales</div>
+            <div class="st-progress"><div class="st-progress-bar" style="width:{% if total_att > 0 %}{% widthratio absent_att total_att 100 %}{% else %}0{% endif %}%"></div></div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="st-card sl">
+            <div class="top-bar"></div>
+            <div class="st-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+            <div class="st-value">{{ pending_justifs }}</div>
+            <div class="st-label">Justifications en attente</div>
+            <div class="st-progress"><div class="st-progress-bar" style="width:{% if pending_justifs > 0 %}100{% else %}0{% endif %}%"></div></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ QR SCANNER ══════════ -->
+<div class="qr-card">
+    <div class="qr-left">
+        <div class="qr-icon-box">📱</div>
+        <div>
+            <div class="qr-text-title">Marquer ma présence</div>
+            <div class="qr-text-sub">Scannez le QR Code affiché par votre enseignant</div>
+        </div>
+    </div>
+    <div class="text-center">
+        <button class="btn-qr" onclick="startCamera()" id="cameraBtn">
+            <i class="bi bi-qr-code-scan"></i> Scanner le QR Code
+        </button>
+        <div style="font-size:.72rem;color:var(--text-light);margin-top:6px;">Pointez vers le QR Code</div>
+    </div>
+</div>
+
+<!-- Zone caméra -->
+<div id="cameraZone" style="display:none;margin-bottom:24px;">
+    <div class="pro-card">
+        <div class="pro-card-hd">
+            <div class="pro-card-title"><i class="bi bi-camera-video"></i>Caméra activée</div>
+            <button class="btn-soft-outline" onclick="stopCamera()">
+                <i class="bi bi-x-circle me-1"></i>Annuler
+            </button>
+        </div>
+        <div class="pro-card-body text-center">
+            <div style="position:relative;display:inline-block;">
+                <video id="qrVideo" style="width:100%;max-width:300px;border-radius:12px;border:2px solid #D8E6F0;" autoplay playsinline></video>
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;height:140px;pointer-events:none;">
+                    <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #5B7FA6;border-left:3px solid #5B7FA6;border-radius:3px 0 0 0;"></div>
+                    <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #5B7FA6;border-right:3px solid #5B7FA6;border-radius:0 3px 0 0;"></div>
+                    <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #5B7FA6;border-left:3px solid #5B7FA6;border-radius:0 0 0 3px;"></div>
+                    <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #5B7FA6;border-right:3px solid #5B7FA6;border-radius:0 0 3px 0;"></div>
+                </div>
+            </div>
+            <canvas id="qrCanvas" style="display:none;"></canvas>
+            <div id="scanStatus" style="font-size:.82rem;color:var(--text-mid);margin-top:12px;">
+                📷 Pointez vers le QR Code de votre enseignant...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ AI PREDICTIONS ══════════ -->
+{% if predictions %}
+<div class="sec-head mb-3"><div class="dot"></div>Analyse intelligente — Prédictions & Alertes</div>
+<div class="row g-3 mb-4">
+    {% for pred in predictions %}
+    <div class="col-md-6">
+        <div class="pred-card {% if pred.level == 'critical' %}critical{% elif pred.level == 'warning' %}warn{% else %}info{% endif %}">
+            <div class="pred-module">{{ pred.module.name }}</div>
+            <div class="pred-msg">{{ pred.message }}</div>
+            <div class="pred-rec">💡 {{ pred.recommendation }}</div>
+            {% if pred.trend == 'increasing' %}
+            <span class="trend-badge trend-up">📈 Tendance en hausse</span>
+            {% elif pred.trend == 'decreasing' %}
+            <span class="trend-badge trend-dn">📉 Tendance en baisse</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ══════════ CHART + MODULE DETAIL ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Absences par module</div>
+<div class="row g-4 mb-4" style="align-items:stretch;">
+
+    <div class="col-lg-7 d-flex flex-column">
+        <div class="pro-card flex-fill">
+            <div class="pro-card-hd">
+                <div class="pro-card-title"><i class="bi bi-bar-chart-fill"></i>Graphique des absences</div>
+            </div>
+            <div class="pro-card-body">
+                <canvas id="moduleChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 d-flex flex-column">
+        <div class="pro-card flex-fill">
+            <div class="pro-card-hd">
+                <div class="pro-card-title"><i class="bi bi-journal-check"></i>Détail par module</div>
+            </div>
+            <div>
+                {% for stat in module_stats %}
+                <div class="mod-row">
+                    <div class="mod-row-top">
+                        <div>
+                            <div class="mod-code-d">{{ stat.module.code }}</div>
+                            <div class="mod-sub-d">{{ stat.present }}/{{ stat.total }} séances présent</div>
+                        </div>
+                        <span class="mod-pct {% if stat.percentage >= 50 %}pct-bad{% elif stat.percentage >= 30 %}pct-warn{% else %}pct-ok{% endif %}">
+                            {{ stat.percentage }}%
+                        </span>
+                    </div>
+                    <div class="mod-progress">
+                        <div class="mod-progress-bar {% if stat.percentage >= 50 %}mpb-bad{% elif stat.percentage >= 30 %}mpb-warn{% else %}mpb-ok{% endif %}"
+                             style="width:{{ stat.percentage }}%"></div>
+                    </div>
+                    {% if stat.percentage >= 30 %}
+                    <div class="alert-text"><i class="bi bi-exclamation-triangle-fill"></i>Seuil d'alerte atteint</div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div style="padding:32px;text-align:center;color:var(--text-light);">
+                    <i class="bi bi-book" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                    Aucun module inscrit
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ ABSENCES TABLE ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Absences récentes</div>
+<div class="abs-table-card mb-4">
+    <div class="abs-table-hd">
+        <div class="abs-table-title">
+            <i class="bi bi-clock-history"></i>
+            Mes dernières absences
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance:student_history' %}" class="btn-soft-outline">Historique complet</a>
+            <a href="{% url 'attendance:student_absences' %}" class="btn-soft-filled">Voir tout</a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="abs-table">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Justification</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in recent_absences %}
+                <tr>
+                    <td>
+                        <div style="font-weight:700;color:var(--text-dark);">{{ att.session.module.code }}</div>
+                        <div style="font-size:.73rem;color:var(--text-light);">{{ att.session.module.name|truncatewords:4 }}</div>
+                    </td>
+                    <td style="color:var(--text-mid);font-size:.83rem;">{{ att.session.date }}</td>
+                    <td>
+                        {% if att.status == 'absent' %}<span class="st-absent">Absent</span>
+                        {% elif att.status == 'late' %}<span class="st-late">En retard</span>
+                        {% elif att.status == 'justified' %}<span class="st-justif">Justifié</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if att.status == 'absent' %}
+                            {% if att.justification %}
+                                <span class="pending-badge">{{ att.justification.get_status_display }}</span>
+                            {% else %}
+                                <a href="{% url 'attendance:justify_absence' att.id %}" class="btn-justif">
+                                    <i class="bi bi-file-earmark-plus me-1"></i>Justifier
+                                </a>
+                            {% endif %}
+                        {% else %}
+                        <span style="color:var(--text-light);font-size:.8rem;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center;padding:44px;color:var(--text-light);">
+                        <i class="bi bi-emoji-smile" style="font-size:2rem;color:#7A9E7E;display:block;margin-bottom:10px;"></i>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--text-dark);">Aucune absence récente</div>
+                        <div style="font-size:.75rem;margin-top:4px;">Continuez comme ça ! 🎉</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+// ── GRAPHIQUE ──
+new Chart(document.getElementById('moduleChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: "Taux d'absence (%)",
+            data: {{ chart_rates|safe }},
+            backgroundColor: {{ chart_rates|safe }}.map(v =>
+                v >= 50 ? 'rgba(184,112,112,0.75)' :
+                v >= 30 ? 'rgba(196,168,130,0.75)' :
+                          'rgba(122,158,126,0.75)'
+            ),
+            borderColor: {{ chart_rates|safe }}.map(v =>
+                v >= 50 ? '#B87070' : v >= 30 ? '#C4A882' : '#7A9E7E'
+            ),
+            borderWidth: 1.5,
+            borderRadius: 10,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#2C3E50',
+                titleColor: '#A8B5C1',
+                bodyColor: '#fff',
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: false,
+                callbacks: { label: c => `  ${c.raw}% d'absences` }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true, max: 100,
+                grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                ticks: { color: '#A8B5C1', callback: v => v + '%', font: { size: 11 } },
+                border: { display: false }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#A8B5C1', font: { size: 11 } },
+                border: { display: false }
+            }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+    }
+});
+
+// ── SCANNER QR ──
+let videoStream = null;
+let scanInterval = null;
+
+async function startCamera() {
+    const zone = document.getElementById('cameraZone');
+    const btn = document.getElementById('cameraBtn');
+    zone.style.display = 'block';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-camera-video-fill me-2"></i>Caméra active...';
+    try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' } }
+        });
+        document.getElementById('qrVideo').srcObject = videoStream;
+        document.getElementById('qrVideo').play();
+        scanInterval = setInterval(scanFrame, 300);
+    } catch (err) {
+        document.getElementById('scanStatus').innerHTML = '❌ Caméra non accessible.';
+    }
+}
+
+function scanFrame() {
+    const video = document.getElementById('qrVideo');
+    const canvas = document.getElementById('qrCanvas');
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+    if (code) {
+        document.getElementById('scanStatus').innerHTML = '✅ QR Code détecté ! Redirection...';
+        stopCamera();
+        setTimeout(() => {
+            window.location.href = code.data.startsWith('http') ? code.data : '/attendance/scan/' + code.data + '/';
+        }, 800);
+    }
+}
+
+function stopCamera() {
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+    document.getElementById('cameraZone').style.display = 'none';
+    const btn = document.getElementById('cameraBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-qr-code-scan me-2"></i>Scanner le QR Code';
+}
+</script>
+{% endblock %}

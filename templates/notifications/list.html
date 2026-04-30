@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header"><i class="bi bi-bell me-2 text-primary"></i>Toutes les notifications</div>
+    <div class="list-group list-group-flush">
+        {% for notif in notifications %}
+        <div class="list-group-item {% if not notif.is_read %}list-group-item-light{% endif %} px-4 py-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="fw-bold" style="font-size:.875rem;">{{ notif.title }}</div>
+                    <div style="font-size:.82rem;color:#64748B;margin-top:2px;">{{ notif.message }}</div>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">{{ notif.created_at|date:"d/m H:i" }}</small>
+                    {% if not notif.is_read %}<span class="badge bg-primary ms-2" style="font-size:.65rem;">Nouveau</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-bell-slash fs-2"></i>
+            <p class="mt-2">Aucune notification</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

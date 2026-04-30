@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Toutes les absences{% endblock %}
+{% block page_title %}Vue globale des absences{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-2 text-primary"></i>Statistiques par étudiant</span>
+        <input type="text" id="search" class="form-control form-control-sm" placeholder="Rechercher..." style="width:200px;">
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0" id="mainTable">
+            <thead><tr><th>Étudiant</th><th>N° Étudiant</th><th>Département</th><th>Total</th><th>Absences</th><th>Taux</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for item in student_stats %}
+                <tr>
+                    <td><strong>{{ item.student.user.get_full_name }}</strong></td>
+                    <td class="mono" style="font-size:.8rem;">{{ item.student.student_id }}</td>
+                    <td style="font-size:.8rem;">{{ item.student.department }}</td>
+                    <td>{{ item.total }}</td>
+                    <td>{{ item.absent }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-1" style="min-width:60px;"><div class="progress-bar {% if item.percentage >= 50 %}bg-danger{% elif item.percentage >= 30 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ item.percentage }}%"></div></div>
+                            <span class="badge {% if item.percentage >= 50 %}bg-danger-soft{% elif item.percentage >= 30 %}bg-warning-soft{% else %}bg-success-soft{% endif %}">{{ item.percentage }}%</span>
+                        </div>
+                    </td>
+                    <td><a href="{% url 'attendance:admin_student_detail' item.student.id %}" class="btn btn-sm btn-outline-primary">Détails</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-4 text-muted">Aucun étudiant</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>document.getElementById('search').addEventListener('input', function(){const q=this.value.toLowerCase();document.querySelectorAll('#mainTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});});</script>{% endblock %}

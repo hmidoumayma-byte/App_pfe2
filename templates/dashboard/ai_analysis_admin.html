@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Analyse IA Admin{% endblock %}
+{% block page_title %}Analyse Intelligente — Administration{% endblock %}
+{% block content %}
+<div class="alert-ai mb-4" style="border-radius:12px;padding:20px;">
+    <div class="d-flex align-items-center gap-3">
+        <div style="font-size:2rem;">🤖</div>
+        <div><div class="fw-bold">Tableau de bord IA — Vue globale</div>
+        <div class="text-muted small">Analyse des risques sur {{ total_students }} étudiants</div></div>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pie-chart me-2 text-primary"></i>Répartition des risques</div>
+            <div class="card-body"><canvas id="riskChart" height="180"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="row g-3">
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-danger" id="highCount">—</div>
+                    <div class="stat-label">🔴 Risque élevé (&gt;50%)</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-warning" id="medCount">—</div>
+                    <div class="stat-label">🟡 Risque modéré (&gt;30%)</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-success" id="lowCount">—</div>
+                    <div class="stat-label">🟢 Faible risque</div>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Recommandations automatiques</h6>
+                <div id="recommendations"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const rd = {{ risk_data|safe }};
+document.getElementById('highCount').textContent = rd.high;
+document.getElementById('medCount').textContent = rd.medium;
+document.getElementById('lowCount').textContent = rd.low;
+const recs = document.getElementById('recommendations');
+if (rd.high > 0) recs.innerHTML += `<div class="alert-ai mb-2 p-3" style="border-radius:8px;"><span class="text-danger fw-bold">🔴 ${rd.high} étudiant(s)</span> en risque critique — Notification administrative recommandée.</div>`;
+if (rd.medium > 0) recs.innerHTML += `<div class="alert-ai mb-2 p-3" style="border-radius:8px;"><span class="text-warning fw-bold">🟡 ${rd.medium} étudiant(s)</span> à surveiller — Envoi d'alerte préventive suggéré.</div>`;
+if (rd.low > 0) recs.innerHTML += `<div class="alert-ai p-3" style="border-radius:8px;"><span class="text-success fw-bold">🟢 ${rd.low} étudiant(s)</span> en bonne situation — Aucune action requise.</div>`;
+new Chart(document.getElementById('riskChart'), {
+    type: 'doughnut',
+    data: { labels: ['Risque élevé', 'Risque modéré', 'Faible risque'], datasets: [{ data: [rd.high, rd.medium, rd.low], backgroundColor: ['#EF4444','#F59E0B','#10B981'], borderWidth: 2 }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

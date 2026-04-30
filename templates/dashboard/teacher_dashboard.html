@@ -1,0 +1,537 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord Enseignant{% endblock %}
+{% block page_title %}Tableau de bord — Enseignant{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --slate-blue: #5B7FA6;
+    --sage-green: #7A9E7E;
+    --lavender: #8B85B5;
+    --warm-beige: #C4A882;
+    --soft-red: #B87070;
+    --text-dark: #2C3E50;
+    --text-mid: #6B7C8E;
+    --text-light: #A8B5C1;
+    --border: #EDF0F3;
+    --card-bg: #FFFFFF;
+}
+
+.tc-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 22px 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.tc-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.09); }
+.tc-card .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+.tc-card.c1 .top-bar { background: linear-gradient(90deg, #5B7FA6, #7BAABA); }
+.tc-card.c2 .top-bar { background: linear-gradient(90deg, #8B85B5, #A8A2CC); }
+.tc-card.c3 .top-bar { background: linear-gradient(90deg, #7A9E7E, #9DC29F); }
+.tc-card.c4 .top-bar { background: linear-gradient(90deg, #C4A882, #D4BC9A); }
+
+.tc-card .tc-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+}
+.tc-card.c1 .tc-icon { background: #EBF1F7; color: #5B7FA6; }
+.tc-card.c2 .tc-icon { background: #F0EFF8; color: #8B85B5; }
+.tc-card.c3 .tc-icon { background: #EEF5EE; color: #7A9E7E; }
+.tc-card.c4 .tc-icon { background: #F7F2EC; color: #C4A882; }
+
+.tc-card .tc-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+.tc-card.c1 .tc-value { color: #5B7FA6; }
+.tc-card.c2 .tc-value { color: #8B85B5; }
+.tc-card.c3 .tc-value { color: #7A9E7E; }
+.tc-card.c4 .tc-value { color: #C4A882; }
+
+.tc-card .tc-label {
+    font-size: .78rem;
+    color: var(--text-mid);
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+.tc-card .tc-footer {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: .75rem;
+    font-weight: 600;
+}
+.tc-card.c1 .tc-footer { color: #5B7FA6; }
+.tc-card.c2 .tc-footer { color: #8B85B5; }
+.tc-card.c3 .tc-footer { color: #7A9E7E; }
+.tc-card.c4 .tc-footer { color: #C4A882; }
+
+.sec-head {
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.sec-head .dot { width: 8px; height: 8px; background: #5B7FA6; border-radius: 50%; flex-shrink: 0; }
+
+.today-card {
+    background: linear-gradient(135deg, #EBF1F7 0%, #EEF5EE 100%);
+    border-radius: 16px;
+    border: 1px solid #D8E6F0;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
+.today-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.session-chip {
+    background: #fff;
+    border: 1px solid #D8E6F0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+.session-chip:hover { border-color: #5B7FA6; box-shadow: 0 4px 12px rgba(91,127,166,0.15); }
+.session-chip-code { font-size: .88rem; font-weight: 700; color: var(--text-dark); }
+.session-chip-time { font-size: .75rem; color: var(--text-mid); margin-top: 2px; }
+
+.btn-manage {
+    background: #5B7FA6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-manage:hover { background: #4A6E93; color: #fff; }
+
+.pro-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+.pro-card-hd {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FAFBFC;
+}
+.pro-card-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pro-card-title i { color: #5B7FA6; }
+.pro-card-body { padding: 20px 22px; }
+
+.btn-add {
+    background: #5B7FA6;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 7px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn-add:hover { background: #4A6E93; color: #fff; transform: translateY(-1px); }
+
+.mod-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+.mod-item:last-child { border-bottom: none; }
+.mod-item:hover { background: #FAFBFF; }
+.mod-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+.mod-code-t { font-size: .88rem; font-weight: 700; color: var(--text-dark); text-decoration: none; }
+.mod-code-t:hover { color: #5B7FA6; }
+.mod-name-t { font-size: .73rem; color: var(--text-light); margin-top: 1px; }
+
+.mod-rate { font-size: .75rem; font-weight: 700; padding: 3px 9px; border-radius: 7px; }
+.rate-ok   { background: #EEF5EE; color: #7A9E7E; }
+.rate-warn { background: #F7F2EC; color: #C4A882; }
+.rate-bad  { background: #F7EEEE; color: #B87070; }
+
+.mod-progress { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+.mod-pb { height: 100%; border-radius: 4px; }
+.pb-ok   { background: #7A9E7E; }
+.pb-warn { background: #C4A882; }
+.pb-bad  { background: #B87070; }
+
+.mod-actions { display: flex; gap: 6px; }
+.btn-xs-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 4px 10px;
+    font-size: .73rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-xs-outline:hover { border-color: #5B7FA6; color: #5B7FA6; background: #EBF1F7; }
+
+.t-pro { width: 100%; border-collapse: collapse; }
+.t-pro thead tr { background: #FAFBFC; }
+.t-pro thead th {
+    padding: 11px 20px;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.t-pro tbody td {
+    padding: 14px 20px;
+    font-size: .85rem;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.t-pro tbody tr:last-child td { border-bottom: none; }
+.t-pro tbody tr:hover td { background: #FAFBFF; }
+
+.t-chip { font-family: monospace; font-size: .78rem; background: #F0F4F8; padding: 4px 10px; border-radius: 7px; color: #5B7FA6; font-weight: 600; }
+.type-chip { font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 7px; background: #EBF1F7; color: #5B7FA6; }
+.qr-on { font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 7px; background: #EEF5EE; color: #7A9E7E; display: inline-flex; align-items: center; gap: 4px; }
+.qr-off { font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 7px; background: #F5F5F5; color: #C0C8D0; }
+.btn-details { background: #EBF1F7; color: #5B7FA6; border: none; border-radius: 8px; padding: 6px 14px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+.btn-details:hover { background: #5B7FA6; color: #fff; }
+</style>
+
+<!-- ══════════ STATS ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Vue d'ensemble</div>
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="tc-card c1">
+            <div class="top-bar"></div>
+            <div class="tc-icon"><i class="bi bi-book-fill"></i></div>
+            <div class="tc-value">{{ modules|length }}</div>
+            <div class="tc-label">Mes modules</div>
+            <div class="tc-footer"><i class="bi bi-check2 me-1"></i>Actifs</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="tc-card c2">
+            <div class="top-bar"></div>
+            <div class="tc-icon"><i class="bi bi-calendar-week-fill"></i></div>
+            <div class="tc-value">{{ total_sessions }}</div>
+            <div class="tc-label">Total séances</div>
+            <div class="tc-footer"><i class="bi bi-clock me-1"></i>Cette année</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="tc-card c3">
+            <div class="top-bar"></div>
+            <div class="tc-icon"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="tc-value">{{ today_sessions|length }}</div>
+            <div class="tc-label">Séances aujourd'hui</div>
+            <div class="tc-footer">
+                {% if today_sessions %}
+                <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>En cours
+                {% else %}
+                <i class="bi bi-dash me-1"></i>Aucune aujourd'hui
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="tc-card c4">
+            <div class="top-bar"></div>
+            <div class="tc-icon"><i class="bi bi-journals"></i></div>
+            <div class="tc-value">{{ module_stats|length }}</div>
+            <div class="tc-label">Modules actifs</div>
+            <div class="tc-footer">
+                {% if module_stats %}
+                <i class="bi bi-bar-chart me-1"></i>En cours de suivi
+                {% else %}
+                <i class="bi bi-dash me-1"></i>Aucun module
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ TODAY SESSIONS ══════════ -->
+{% if today_sessions %}
+<div class="sec-head mb-3"><div class="dot"></div>Séances du jour</div>
+<div class="today-card">
+    <div class="today-title">
+        <i class="bi bi-calendar-event-fill" style="color:#5B7FA6;"></i>
+        Vos séances d'aujourd'hui — {{ today_sessions|length }} séance(s)
+    </div>
+    <div class="row g-2">
+        {% for session in today_sessions %}
+        <div class="col-md-4">
+            <div class="session-chip">
+                <div>
+                    <div class="session-chip-code">{{ session.module.code }}</div>
+                    <div class="session-chip-time">
+                        {{ session.start_time|time:"H:i" }} —
+                        {% if session.room %}Salle {{ session.room }}{% else %}Salle —{% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'attendance:session_detail' session.pk %}" class="btn-manage">Gérer</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ══════════ CHART + MODULES ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Statistiques & Modules</div>
+<div class="row g-4 mb-4" style="align-items:stretch;">
+
+    <div class="col-lg-7 d-flex flex-column">
+        <div class="pro-card flex-fill">
+            <div class="pro-card-hd">
+                <div class="pro-card-title">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    Présences cette semaine
+                </div>
+            </div>
+            <div class="pro-card-body">
+                <canvas id="weeklyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 d-flex flex-column">
+        <div class="pro-card flex-fill">
+            <div class="pro-card-hd">
+                <div class="pro-card-title">
+                    <i class="bi bi-book-fill"></i>
+                    Mes modules
+                </div>
+                <a href="{% url 'attendance:create_module' %}" class="btn-add">
+                    <i class="bi bi-plus"></i> Ajouter
+                </a>
+            </div>
+            <div style="max-height:320px;overflow-y:auto;">
+                {% for stat in module_stats %}
+                <div class="mod-item">
+                    <div class="mod-item-top">
+                        <div>
+                            <a href="{% url 'attendance:module_absences' stat.module.id %}" class="mod-code-t">
+                                {{ stat.module.code }}
+                            </a>
+                            <div class="mod-name-t">{{ stat.module.name|truncatewords:5 }}</div>
+                        </div>
+                        <span class="mod-rate {% if stat.absence_rate >= 50 %}rate-bad{% elif stat.absence_rate >= 30 %}rate-warn{% else %}rate-ok{% endif %}">
+                            {{ stat.absence_rate }}% abs
+                        </span>
+                    </div>
+                    <div class="mod-progress">
+                        <div class="mod-pb {% if stat.absence_rate >= 50 %}pb-bad{% elif stat.absence_rate >= 30 %}pb-warn{% else %}pb-ok{% endif %}"
+                             style="width:{{ stat.absence_rate }}%"></div>
+                    </div>
+                    <div class="mod-actions">
+                        <a href="{% url 'attendance:create_session_for_module' stat.module.id %}" class="btn-xs-outline">
+                            <i class="bi bi-plus me-1"></i>Séance
+                        </a>
+                        <a href="{% url 'attendance:module_absences' stat.module.id %}" class="btn-xs-outline">
+                            <i class="bi bi-bar-chart me-1"></i>Absences
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="padding:32px;text-align:center;color:var(--text-light);">
+                    <i class="bi bi-book" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                    <div style="font-size:.85rem;">Aucun module créé</div>
+                    <a href="{% url 'attendance:create_module' %}" style="color:#5B7FA6;font-size:.8rem;font-weight:600;">
+                        Créer votre premier module
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════ RECENT SESSIONS ══════════ -->
+<div class="sec-head mb-3"><div class="dot"></div>Activité récente</div>
+<div class="pro-card mb-4">
+    <div class="pro-card-hd">
+        <div class="pro-card-title">
+            <i class="bi bi-clock-history"></i>
+            Séances récentes
+        </div>
+        <a href="{% url 'attendance:create_session' %}" class="btn-add">
+            <i class="bi bi-plus"></i> Nouvelle séance
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="t-pro">
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Date</th>
+                    <th>Horaire</th>
+                    <th>Salle</th>
+                    <th>Type</th>
+                    <th>QR</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in recent_sessions %}
+                <tr>
+                    <td>
+                        <div style="font-weight:700;color:var(--text-dark);">{{ session.module.code }}</div>
+                        <div style="font-size:.72rem;color:var(--text-light);">{{ session.module.name|truncatewords:3 }}</div>
+                    </td>
+                    <td style="color:var(--text-mid);font-size:.83rem;">{{ session.date }}</td>
+                    <td><span class="t-chip">{{ session.start_time|time:"H:i" }}–{{ session.end_time|time:"H:i" }}</span></td>
+                    <td style="color:var(--text-mid);">{{ session.room|default:"—" }}</td>
+                    <td><span class="type-chip">{{ session.get_session_type_display }}</span></td>
+                    <td>
+                        {% if session.is_qr_active %}
+                        <span class="qr-on"><i class="bi bi-qr-code-scan"></i>Actif</span>
+                        {% else %}
+                        <span class="qr-off">Off</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'attendance:session_detail' session.pk %}" class="btn-details">Détails</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:44px;color:var(--text-light);">
+                        <i class="bi bi-calendar-x" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                        Aucune séance enregistrée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const wd = {{ weekly_data|safe }};
+new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ labels|safe }},
+        datasets: [
+            {
+                label: 'Présents',
+                data: wd.map(d => d.present),
+                backgroundColor: 'rgba(122,158,126,0.75)',
+                borderColor: '#7A9E7E',
+                borderWidth: 1.5,
+                borderRadius: 8,
+                borderSkipped: false,
+            },
+            {
+                label: 'Absents',
+                data: wd.map(d => d.absent),
+                backgroundColor: 'rgba(184,112,112,0.75)',
+                borderColor: '#B87070',
+                borderWidth: 1.5,
+                borderRadius: 8,
+                borderSkipped: false,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    color: '#6B7C8E',
+                    font: { size: 11, weight: '600' },
+                    usePointStyle: true,
+                    pointStyleWidth: 8,
+                }
+            },
+            tooltip: {
+                backgroundColor: '#2C3E50',
+                titleColor: '#A8B5C1',
+                bodyColor: '#fff',
+                padding: 12,
+                cornerRadius: 10,
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { color: '#A8B5C1', font: { size: 11 } },
+                border: { display: false }
+            },
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                ticks: { color: '#A8B5C1', font: { size: 11 } },
+                border: { display: false }
+            }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+    }
+});
+</script>
+{% endblock %}
