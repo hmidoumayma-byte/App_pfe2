@@ -1,60 +1,55 @@
-/* GestiAbsence — Custom styles */
+/* GestionAbsence — Custom styles — Palette Bordeaux/Rose */
 
-/* Sidebar active state override */
+:root {
+    --burgundy: #6B1F2A;
+    --wine: #8B3042;
+    --dusty-rose: #B07080;
+    --blush: #D4A0A8;
+    --taupe: #C4AFA0;
+    --navy: #1E2D45;
+}
+
 .nav-link-sidebar.active {
-    background: rgba(79, 70, 229, 0.2) !important;
-    border-left: 3px solid #4F46E5 !important;
+    background: rgba(107,31,42,0.2) !important;
+    border-left: 3px solid #B07080 !important;
     color: #fff !important;
 }
 
-/* Table hover effect */
 .table-hover tbody tr:hover {
-    background-color: rgba(79, 70, 229, 0.03);
+    background-color: rgba(107,31,42,0.03);
 }
 
-/* Card border on hover */
 .card:hover {
-    border-color: rgba(79, 70, 229, 0.2);
-    transition: border-color 0.2s ease;
+    border-color: rgba(107,31,42,0.15);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* QR Code pulse animation when active */
 @keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-    70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(93,155,132,0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(93,155,132,0); }
+    100% { box-shadow: 0 0 0 0 rgba(93,155,132,0); }
 }
+.qr-active { animation: pulse-green 2s infinite; }
 
-.qr-active {
-    animation: pulse-green 2s infinite;
-}
+.content-area { animation: fadeInUp 0.35s ease forwards; }
 
-/* Smooth page transitions */
-.content-area {
-    animation: fadeInUp 0.35s ease forwards;
-}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #FAF6F7; }
+::-webkit-scrollbar-thumb { background: rgba(176,112,128,.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(107,31,42,.4); }
 
-/* Better scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #F1F5F9; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-
-/* Responsive table text */
 @media (max-width: 576px) {
-    .table td, .table th { font-size: .78rem; padding: 8px 10px; }
+    .table td, .table th { font-size: .76rem; padding: 8px 10px; }
 }
 
-/* Loading spinner */
 .spinner-border-sm { width: 1rem; height: 1rem; }
 
-/* Status pill */
 .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: .75rem;
-    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: .73rem; font-weight: 600;
 }
+
+.icon-wine { background: rgba(107,31,42,0.1); color: var(--wine); }
+.icon-rose { background: rgba(176,112,128,0.12); color: var(--dusty-rose); }
+.icon-navy { background: rgba(30,45,69,0.1); color: var(--navy); }
