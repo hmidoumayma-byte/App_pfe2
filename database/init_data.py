@@ -18,13 +18,13 @@ from django.utils import timezone
 from datetime import date, time, timedelta
 import random
 
-print("🚀 Création des données de test...")
+print(" Création des données de test...")
 
 # ── ADMIN ──────────────────────────────────────────────
 if not User.objects.filter(username='admin').exists():
     admin = User.objects.create(
         username='admin',
-        email='admin@gestiabsence.ma',
+        email='admin@gmail.com',
         first_name='Admin',
         last_name='Système',
         role='admin',
