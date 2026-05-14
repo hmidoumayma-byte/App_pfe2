@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Filiere{% endblock %}
+{% block page_title %}{{ action }} une filiere{% endblock %}
+{% block content %}
+<div class='card' style='max-width:600px;'><div class='card-body p-4'>
+  <form method='post'>{% csrf_token %}
+    <div class='mb-3'><label class='form-label fw-semibold'>Code</label>
+      <input type='text' name='code' class='form-control' value='{{ filiere.code }}' placeholder='Ex: GI' required></div>
+    <div class='mb-3'><label class='form-label fw-semibold'>Nom complet</label>
+      <input type='text' name='name' class='form-control' value='{{ filiere.name }}' placeholder='Ex: Genie Informatique' required></div>
+    <div class='mb-3'><label class='form-label fw-semibold'>Description</label>
+      <textarea name='description' class='form-control' rows='3'>{{ filiere.description }}</textarea></div>
+    {% if filiere %}
+    <div class='form-check mb-3'>
+      <input class='form-check-input' type='checkbox' name='is_active' {% if filiere.is_active %}checked{% endif %}>
+      <label class='form-check-label'>Active</label></div>
+    {% endif %}
+    <div class='d-flex gap-2'>
+      <button type='submit' class='btn btn-primary'>{{ action }}</button>
+      <a href='{% url "academic:filiere_list" %}' class='btn btn-outline-secondary'>Annuler</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

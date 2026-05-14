@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     'attendance',
     'dashboard',
     'notifications',
+    'academic',       # Gestion pedagogique
+    'messaging',      # Messagerie
+    'core_settings',  # Parametres systeme
+
     # Librairies tierces
     'crispy_forms',
     'crispy_bootstrap5',

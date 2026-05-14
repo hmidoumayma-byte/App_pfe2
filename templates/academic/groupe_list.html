@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Groupes{% endblock %}
+{% block page_title %}Gestion des Groupes{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <p class='text-muted small mb-0'>{{ groupes|length }} groupe(s)</p>
+  <a href='{% url "academic:groupe_create" %}' class='btn btn-primary btn-sm'>
+    <i class='bi bi-plus-circle me-1'></i>Nouveau groupe</a>
+</div>
+<div class='card'><div class='table-responsive'>
+  <table class='table table-hover mb-0'>
+    <thead><tr><th>Groupe</th><th>Filiere</th><th>Annee</th><th>Max etudiants</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for g in groupes %}
+    <tr>
+      <td><strong>{{ g.name }}</strong></td>
+      <td>{{ g.niveau.filiere.code }}</td>
+      <td>{{ g.niveau.year_number }}e Annee</td>
+      <td>{{ g.max_students }}</td>
+      <td><span class='badge {% if g.is_active %}bg-success-soft{% else %}bg-danger-soft{% endif %}'>
+        {% if g.is_active %}Actif{% else %}Inactif{% endif %}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan='5' class='text-center py-4 text-muted'>Aucun groupe cree.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

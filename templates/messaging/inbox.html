@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% block title %}Messagerie{% endblock %}{% block page_title %}Messagerie{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <p class='text-muted small mb-0'>{{ conversations|length }} conversation(s)</p>
+  <a href='{% url "messaging:new" %}' class='btn btn-primary btn-sm'><i class='bi bi-pencil-square me-1'></i>Nouveau message</a>
+</div>
+<div class='card'>
+{% for conv in conversations %}
+<a href='{% url "messaging:conversation" conv.pk %}' class='d-flex align-items-center gap-3 p-3 border-bottom text-decoration-none {% if conv.unread_count > 0 %}bg-primary-soft{% endif %}' style='color:inherit;'>
+  <div style='width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6B1F2A,#8B3042);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;flex-shrink:0;'>
+    <i class='bi bi-chat-dots'></i></div>
+  <div class='flex-1'>
+    <div class='d-flex justify-content-between'>
+      <div class='fw-semibold' style='font-size:.9rem;'>{{ conv.subject }}</div>
+      <div class='text-muted' style='font-size:.75rem;'>{{ conv.updated_at|date:'d/m H:i' }}</div>
+    </div>
+    {% with last=conv.get_last_message %}{% if last %}
+    <div class='text-muted small'>{{ last.sender.get_full_name }}: {{ last.content|truncatechars:60 }}</div>
+    {% endif %}{% endwith %}
+  </div>
+  {% if conv.unread_count > 0 %}<span class='badge bg-danger rounded-pill'>{{ conv.unread_count }}</span>{% endif %}
+</a>
+{% empty %}
+<div class='p-5 text-center text-muted'><i class='bi bi-chat-square' style='font-size:2.5rem;opacity:.4;'></i>
+  <p class='mt-3'>Aucune conversation. <a href='{% url "messaging:new" %}'>Ecrire un message</a></p></div>
+{% endfor %}
+</div>{% endblock %}

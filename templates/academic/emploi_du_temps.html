@@ -1,0 +1,42 @@
+{% extends 'base.html' %}{% load academic_extras %}
+{% block title %}Emploi du temps{% endblock %}
+{% block page_title %}Emploi du temps{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-3'>
+  <form method='get' class='d-flex gap-2'>
+    <select name='groupe' class='form-select form-select-sm' style='width:220px;'>
+      <option value=''>Tous les groupes</option>
+      {% for g in groupes %}
+      <option value='{{ g.pk }}' {% if g.pk|stringformat:"s" == selected_groupe %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+    <button type='submit' class='btn btn-sm btn-outline-primary'>Filtrer</button>
+  </form>
+  <a href='{% url "academic:emploi_create" %}' class='btn btn-primary btn-sm'>
+    <i class='bi bi-plus-circle me-1'></i>Ajouter creneau</a>
+</div>
+<div class='card'><div class='table-responsive'>
+  <table class='table table-bordered mb-0' style='min-width:700px;'>
+    <thead><tr style='background:#1C0E12;'>
+      <th style='color:#fff;width:90px;'>Horaire</th>
+      {% for label in jours_labels %}<th style='color:#fff;text-align:center;'>{{ label }}</th>{% endfor %}
+    </tr></thead>
+    <tbody>
+      {% for slot in '08:00 10:00 12:00 14:00 16:00 18:00'|split %}
+      <tr><td class='text-muted small fw-semibold'>{{ slot }}</td>
+        {% for jour in 'lun mar mer jeu ven sam'|split %}
+        <td style='vertical-align:top;min-height:60px;padding:4px;'>
+          {% for entry in planning|get:jour %}
+          {% if entry.heure_debut|time:'H:i' == slot %}
+          <div style='background:#FAF0F2;border:1px solid rgba(176,112,128,.3);border-radius:6px;padding:6px 8px;font-size:.75rem;margin-bottom:2px;'>
+            <div class='fw-bold' style='color:#6B1F2A;'>{{ entry.module_name }}</div>
+            <div class='text-muted'>{{ entry.teacher.user.get_full_name }}</div>
+            <div>{{ entry.heure_debut|time:'H:i' }}–{{ entry.heure_fin|time:'H:i' }}</div>
+            {% if entry.salle %}<div class='badge bg-info-soft'>{{ entry.salle.name }}</div>{% endif %}
+          </div>
+          {% endif %}{% endfor %}
+        </td>{% endfor %}
+      </tr>{% endfor %}
+    </tbody></table>
+</div></div>
+{% endblock %}

@@ -27,6 +27,9 @@ urlpatterns = [
     path('attendance/', include('attendance.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('notifications/', include('notifications.urls')),
+    path('academic/', include('academic.urls')),
+    path('system/', include('core_settings.urls')),
+    path('messaging/', include('messaging.urls')),
     path('', home_view, name='home'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

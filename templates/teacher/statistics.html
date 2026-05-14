@@ -1,0 +1,46 @@
+{% extends 'base.html' %}{% block title %}Statistiques{% endblock %}{% block page_title %}Analyse Statistique{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <div class='d-flex gap-2'>
+    <a href='?period=week' class='btn btn-sm {% if period=="week" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>4 semaines</a>
+    <a href='?period=month' class='btn btn-sm {% if period=="month" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>3 mois</a>
+    <a href='?period=all' class='btn btn-sm {% if period=="all" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Tout</a>
+  </div>
+  <a href='?period={{ period }}&export=excel' class='btn btn-success btn-sm'>
+    <i class='bi bi-file-earmark-excel me-1'></i>Exporter Excel</a>
+</div>
+{% for stat in module_stats %}
+<div class='card mb-4'>
+  <div class='card-header d-flex justify-content-between'>
+    <strong style='color:#6B1F2A;'>{{ stat.module.code }} — {{ stat.module.name }}</strong>
+    <span class='badge {% if stat.rate >= 50 %}bg-danger{% elif stat.rate >= 30 %}bg-warning text-dark{% else %}bg-success{% endif %}'>{{ stat.rate }}% absences</span>
+  </div>
+  <div class='card-body'>
+    <div class='row g-3 mb-3'>
+      <div class='col-3 text-center'><div class='fw-bold fs-4' style='font-family:Cormorant Garamond,serif;color:#8B3042;'>{{ stat.total }}</div><div class='text-muted small'>Total</div></div>
+      <div class='col-3 text-center'><div class='fw-bold fs-4 text-success' style='font-family:Cormorant Garamond,serif;'>{{ stat.present }}</div><div class='text-muted small'>Presences</div></div>
+      <div class='col-3 text-center'><div class='fw-bold fs-4 text-danger' style='font-family:Cormorant Garamond,serif;'>{{ stat.absent }}</div><div class='text-muted small'>Absences</div></div>
+      <div class='col-3 text-center'><div class='fw-bold fs-4 text-warning' style='font-family:Cormorant Garamond,serif;'>{{ stat.late }}</div><div class='text-muted small'>Retards</div></div>
+    </div>
+    <div class='row g-4'>
+      <div class='col-md-7'><div class='mb-1 fw-semibold small text-muted'>Evolution 8 semaines</div><canvas id='chart_{{ forloop.counter }}' height='80'></canvas></div>
+      <div class='col-md-5'><div class='mb-1 fw-semibold small text-muted'>Motifs d absence</div>
+        {% if stat.motifs %}{% for m in stat.motifs %}
+        <div class='d-flex justify-content-between mb-1'><span style='font-size:.8rem;'>{{ m.reason }}</span><span class='badge bg-primary-soft'>{{ m.count }}</span></div>
+        {% endfor %}{% else %}<p class='text-muted small'>Aucun justificatif soumis.</p>{% endif %}
+      </div>
+    </div>
+    {% if stat.group_data %}
+    <div class='mt-3'><div class='fw-semibold small text-muted mb-2'>Comparaison groupes</div>
+      {% for g in stat.group_data %}
+      <div class='d-flex align-items-center gap-3 mb-1'>
+        <span style='width:40px;font-size:.8rem;font-weight:700;'>{{ g.group }}</span>
+        <div class='progress flex-1'><div class='progress-bar {% if g.rate >= 50 %}bg-danger{% elif g.rate >= 30 %}bg-warning{% else %}bg-success{% endif %}' style='width:{{ g.rate }}%'></div></div>
+        <span style='width:45px;font-size:.8rem;'>{{ g.rate }}%</span>
+      </div>
+      {% endfor %}
+    </div>{% endif %}
+  </div>
+</div>
+<script>(function(){new Chart(document.getElementById('chart_{{ forloop.counter }}'),{type:'bar',data:{labels:['S-8','S-7','S-6','S-5','S-4','S-3','S-2','S-1'],datasets:[{label:'Absences',data:{{ stat.weekly|safe }},backgroundColor:'rgba(139,48,66,.65)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}});})();</script>
+{% endfor %}{% endblock %}

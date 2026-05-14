@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Filieres{% endblock %}
+{% block page_title %}Gestion des Filieres{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <p class='text-muted small mb-0'>{{ filieres|length }} filiere(s)</p>
+  <a href='{% url "academic:filiere_create" %}' class='btn btn-primary btn-sm'>
+    <i class='bi bi-plus-circle me-1'></i>Nouvelle filiere
+  </a>
+</div>
+<div class='row g-3'>
+{% for f in filieres %}
+<div class='col-md-4'>
+  <div class='card h-100'><div class='card-body'>
+    <div class='d-flex justify-content-between mb-2'>
+      <span class='badge bg-primary-soft fw-bold'>{{ f.code }}</span>
+      <span class='badge {% if f.is_active %}bg-success-soft{% else %}bg-secondary{% endif %}'>
+        {% if f.is_active %}Active{% else %}Inactive{% endif %}</span>
+    </div>
+    <h6 class='fw-bold'>{{ f.name }}</h6>
+    <p class='text-muted small'>{{ f.description|truncatechars:80 }}</p>
+    <a href='{% url "academic:filiere_edit" f.pk %}' class='btn btn-sm btn-outline-secondary'>
+      <i class='bi bi-pencil me-1'></i>Modifier</a>
+  </div></div>
+</div>
+{% empty %}
+<div class='col-12 text-center py-5 text-muted'>
+  <i class='bi bi-diagram-3' style='font-size:2.5rem;opacity:.4;'></i>
+  <p class='mt-3'>Aucune filiere. <a href='{% url "academic:filiere_create" %}'>Creer</a></p>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

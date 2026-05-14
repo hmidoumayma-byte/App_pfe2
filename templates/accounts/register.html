@@ -9,216 +9,208 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8FAFC; min-height: 100vh; }
-        .register-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 16px;
-        }
-        .register-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 4px 40px rgba(0,0,0,.08);
-            width: 100%;
-            max-width: 680px;
-            padding: 40px 48px;
-        }
-        .form-label { font-size: .8rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-        .form-control, .form-select {
-            border: 1.5px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: .9rem;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #4F46E5;
-            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
-        }
-        .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-        .role-option {
-            border: 2px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all .2s;
-            text-align: center;
-        }
-        .role-option:hover, .role-option.selected { border-color: #4F46E5; background: #EEF2FF; }
-        .role-option .icon { font-size: 2rem; margin-bottom: 6px; }
-        .role-option .name { font-weight: 700; font-size: .9rem; color: #0F172A; }
-        .role-option .desc { font-size: .75rem; color: #64748B; }
-        .role-option.selected .name { color: #4F46E5; }
-        .section-heading { font-weight: 700; font-size: .95rem; color: #0F172A; margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #EEF2FF; }
-        .btn-register {
-            background: linear-gradient(135deg, #4F46E5, #6366F1);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 12px;
-            font-weight: 700;
-            font-size: .95rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            width: 100%;
-            cursor: pointer;
-            transition: all .25s;
-        }
-        .btn-register:hover { background: linear-gradient(135deg, #3730A3, #4F46E5); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.35); }
-        .is-invalid { border-color: #EF4444 !important; }
-        .invalid-feedback { font-size: .8rem; color: #EF4444; }
+        .register-wrapper { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 16px; }
+        .register-card { background:#fff; border-radius:20px; box-shadow:0 4px 40px rgba(0,0,0,.08); width:100%; max-width:720px; padding:40px 48px; }
+        .form-label { font-size:.8rem; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+        .form-control, .form-select { border:1.5px solid #E2E8F0; border-radius:10px; padding:10px 14px; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; }
+        .form-control:focus, .form-select:focus { border-color:#4F46E5; box-shadow:0 0 0 3px rgba(79,70,229,.12); }
+        .role-selector { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+        .role-option { border:2px solid #E2E8F0; border-radius:12px; padding:16px; cursor:pointer; transition:all .2s; text-align:center; }
+        .role-option:hover, .role-option.selected { border-color:#4F46E5; background:#EEF2FF; }
+        .role-option .icon { font-size:2rem; margin-bottom:6px; }
+        .role-option .name { font-weight:700; font-size:.9rem; color:#0F172A; }
+        .role-option .desc { font-size:.75rem; color:#64748B; }
+        .role-option.selected .name { color:#4F46E5; }
+        .section-heading { font-weight:700; font-size:.95rem; color:#0F172A; margin:24px 0 16px; padding-bottom:8px; border-bottom:2px solid #EEF2FF; display:flex; align-items:center; gap:8px; }
+        .step-badge { background:#4F46E5; color:#fff; border-radius:50%; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:.7rem; flex-shrink:0; }
+        .btn-register { background:linear-gradient(135deg,#4F46E5,#6366F1); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:.95rem; font-family:'Plus Jakarta Sans',sans-serif; width:100%; cursor:pointer; transition:all .25s; }
+        .btn-register:hover { background:linear-gradient(135deg,#3730A3,#4F46E5); transform:translateY(-1px); box-shadow:0 6px 20px rgba(79,70,229,.35); }
+        .is-invalid { border-color:#EF4444 !important; }
+        .invalid-feedback { font-size:.8rem; color:#EF4444; }
+        .terms-box { background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; max-height:120px; overflow-y:auto; font-size:.8rem; color:#64748B; margin-bottom:12px; line-height:1.7; }
     </style>
 </head>
 <body>
 <div class="register-wrapper">
-    <div class="register-card">
-        <div class="text-center mb-4">
-            <div style="width:56px;height:56px;background:linear-gradient(135deg,#4F46E5,#06B6D4);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.5rem;">
-                <i class="bi bi-person-plus-fill text-white"></i>
-            </div>
-            <h4 style="font-weight:800;color:#0F172A;letter-spacing:-.5px;">Créer votre compte</h4>
-            <p style="color:#64748B;font-size:.875rem;">Rejoignez GestiAbsence dès maintenant</p>
-        </div>
-
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-danger mb-3" style="border-radius:10px;font-size:.875rem;">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-
-        <form method="post" id="registerForm">
-            {% csrf_token %}
-
-            <!-- Role Selection -->
-            <div class="section-heading">Choisissez votre rôle</div>
-            <div class="role-selector">
-                <div class="role-option selected" id="role-teacher" onclick="selectRole('teacher')">
-                    <div class="icon">👨‍🏫</div>
-                    <div class="name">Enseignant</div>
-                    <div class="desc">Gérer les séances et les absences</div>
-                </div>
-                <div class="role-option" id="role-student" onclick="selectRole('student')">
-                    <div class="icon">🎓</div>
-                    <div class="name">Étudiant</div>
-                    <div class="desc">Suivre ses absences et justifier</div>
-                </div>
-            </div>
-            <input type="hidden" name="role" id="roleInput" value="teacher">
-
-            <!-- Personal Info -->
-            <div class="section-heading">Informations personnelles</div>
-            <div class="row g-3">
-                <div class="col-6">
-                    <label class="form-label">Prénom *</label>
-                    <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" value="{{ form.first_name.value|default:'' }}" required>
-                    {% if form.first_name.errors %}<div class="invalid-feedback">{{ form.first_name.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Nom *</label>
-                    <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" value="{{ form.last_name.value|default:'' }}" required>
-                    {% if form.last_name.errors %}<div class="invalid-feedback">{{ form.last_name.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Email *</label>
-                    <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" value="{{ form.email.value|default:'' }}" required>
-                    {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Téléphone</label>
-                    <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Nom d'utilisateur *</label>
-                    <input type="text" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value|default:'' }}" required>
-                    {% if form.username.errors %}<div class="invalid-feedback">{{ form.username.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Département *</label>
-                    <input type="text" name="department" class="form-control" value="{{ form.department.value|default:'' }}" placeholder="Ex: Génie Informatique">
-                </div>
-            </div>
-
-            <!-- Teacher-specific -->
-            <div id="teacher-fields">
-                <div class="section-heading">Informations enseignant</div>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="form-label">N° Enseignant *</label>
-                        <input type="text" name="teacher_id" class="form-control" value="{{ form.teacher_id.value|default:'' }}" placeholder="ENS20240001">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Spécialisation</label>
-                        <input type="text" name="specialization" class="form-control" value="{{ form.specialization.value|default:'' }}" placeholder="Ex: Génie Logiciel">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Student-specific -->
-            <div id="student-fields" style="display:none;">
-                <div class="section-heading">Informations étudiant</div>
-                <div class="row g-3">
-                    <div class="col-4">
-                        <label class="form-label">N° Étudiant *</label>
-                        <input type="text" name="student_id" class="form-control" value="{{ form.student_id.value|default:'' }}" placeholder="ETU20240001">
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Année</label>
-                        <select name="year_of_study" class="form-select">
-                            {% for i in "12345" %}<option value="{{ i }}">{{ i }}ème Année</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label">Groupe</label>
-                        <input type="text" name="group" class="form-control" value="{{ form.group.value|default:'' }}" placeholder="G1">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Password -->
-            <div class="section-heading">Sécurité</div>
-            <div class="row g-3">
-                <div class="col-6">
-                    <label class="form-label">Mot de passe *</label>
-                    <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" required>
-                    {% if form.password1.errors %}<div class="invalid-feedback">{{ form.password1.errors.0 }}</div>{% endif %}
-                </div>
-                <div class="col-6">
-                    <label class="form-label">Confirmer *</label>
-                    <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" required>
-                    {% if form.password2.errors %}<div class="invalid-feedback">{{ form.password2.errors.0 }}</div>{% endif %}
-                </div>
-            </div>
-
-            <button type="submit" class="btn-register mt-4">
-                <i class="bi bi-person-check-fill me-2"></i>Créer mon compte
-            </button>
-        </form>
-
-        <div class="text-center mt-3" style="font-size:.875rem;color:#64748B;">
-            Déjà un compte ?
-            <a href="{% url 'accounts:login' %}" style="color:#4F46E5;font-weight:600;text-decoration:none;">Se connecter</a>
-        </div>
+  <div class="register-card">
+    <div class="text-center mb-4">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#4F46E5,#06B6D4);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.5rem;">
+        <i class="bi bi-person-plus-fill text-white"></i>
+      </div>
+      <h4 style="font-weight:800;color:#0F172A;letter-spacing:-.5px;">Créer votre compte</h4>
+      <p style="color:#64748B;font-size:.875rem;">Rejoignez GestiAbsence dès maintenant</p>
     </div>
+
+    {% if messages %}{% for message in messages %}
+    <div class="alert alert-danger mb-3" style="border-radius:10px;font-size:.875rem;">{{ message }}</div>
+    {% endfor %}{% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="registerForm">
+      {% csrf_token %}
+
+      <!-- Rôle -->
+      <div class="section-heading">Choisissez votre rôle</div>
+      <div class="role-selector">
+        <div class="role-option selected" id="role-teacher" onclick="selectRole('teacher')">
+          <div class="icon">👨‍🏫</div>
+          <div class="name">Enseignant</div>
+          <div class="desc">Gérer les séances et les absences</div>
+        </div>
+        <div class="role-option" id="role-student" onclick="selectRole('student')">
+          <div class="icon">🎓</div>
+          <div class="name">Étudiant</div>
+          <div class="desc">Suivre ses absences et justifier</div>
+        </div>
+      </div>
+      <input type="hidden" name="role" id="roleInput" value="teacher">
+
+      <!-- Étape 1 : Infos personnelles -->
+      <div class="section-heading"><span class="step-badge">1</span> Informations personnelles</div>
+      <div class="row g-3">
+        <div class="col-6">
+          <label class="form-label">Prénom *</label>
+          <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" value="{{ form.first_name.value|default:'' }}" required>
+          {% if form.first_name.errors %}<div class="invalid-feedback">{{ form.first_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Nom *</label>
+          <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" value="{{ form.last_name.value|default:'' }}" required>
+          {% if form.last_name.errors %}<div class="invalid-feedback">{{ form.last_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Email *</label>
+          <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" value="{{ form.email.value|default:'' }}" required>
+          {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Téléphone</label>
+          <input type="text" name="phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+        </div>
+        <div class="col-6">
+          <label class="form-label">Nom d'utilisateur *</label>
+          <input type="text" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value|default:'' }}" required>
+          {% if form.username.errors %}<div class="invalid-feedback">{{ form.username.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Département *</label>
+          <input type="text" name="department" class="form-control" value="{{ form.department.value|default:'' }}" placeholder="Ex: Génie Informatique">
+        </div>
+      </div>
+
+      <!-- ===== ENSEIGNANT ===== -->
+      <div id="teacher-fields">
+        <div class="section-heading"><span class="step-badge">2</span> Informations enseignant</div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">N° Enseignant *</label>
+            <input type="text" name="teacher_id" class="form-control" value="{{ form.teacher_id.value|default:'' }}" placeholder="ENS20240001">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Spécialisation</label>
+            <input type="text" name="specialization" class="form-control" value="{{ form.specialization.value|default:'' }}" placeholder="Ex: Génie Logiciel">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ÉTUDIANT ===== -->
+      <div id="student-fields" style="display:none;">
+        <div class="section-heading"><span class="step-badge">2</span> Informations académiques</div>
+        <div class="row g-3">
+          <div class="col-4">
+            <label class="form-label">N° Étudiant *</label>
+            <input type="text" name="student_id" class="form-control {% if form.student_id.errors %}is-invalid{% endif %}" value="{{ form.student_id.value|default:'' }}" placeholder="ETU20240001">
+            {% if form.student_id.errors %}<div class="invalid-feedback">{{ form.student_id.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-4">
+            <label class="form-label">Année</label>
+            <select name="year_of_study" class="form-select">
+              {% for i in "12345" %}<option value="{{ i }}">{{ i }}ème Année</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-4">
+            <label class="form-label">Groupe</label>
+            <input type="text" name="group" class="form-control" value="{{ form.group.value|default:'' }}" placeholder="G1">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Code institutionnel</label>
+            <input type="text" name="institutional_code" class="form-control" value="{{ form.institutional_code.value|default:'' }}" placeholder="Ex: USMC-GI-2024-001">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Contact d'urgence</label>
+            <input type="text" name="emergency_contact" class="form-control" value="{{ form.emergency_contact.value|default:'' }}" placeholder="Nom et téléphone parent">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Date de naissance</label>
+            <input type="date" name="date_of_birth" class="form-control" value="{{ form.date_of_birth.value|default:'' }}">
+          </div>
+        </div>
+
+        <div class="section-heading"><span class="step-badge">3</span> Photo d'identité</div>
+        <div>
+          <label class="form-label">Photo (JPG/PNG, max 2 Mo) — optionnel</label>
+          <input type="file" name="identity_photo" class="form-control" accept="image/*">
+        </div>
+
+        <div class="section-heading"><span class="step-badge">4</span> Conditions d'utilisation</div>
+        <div class="terms-box">
+          En utilisant ce système de gestion des absences, vous acceptez que vos données
+          personnelles (nom, contacts, présences) soient collectées et utilisées uniquement
+          dans le cadre de votre suivi académique. Ces données ne seront jamais partagées
+          avec des tiers sans votre consentement explicite.
+        </div>
+        <div class="form-check">
+          <input type="checkbox" name="terms_accepted" id="id_terms_accepted"
+                 class="form-check-input" {% if form.terms_accepted.value %}checked{% endif %}>
+          <label class="form-check-label" for="id_terms_accepted" style="font-size:.88rem;">
+            J'accepte les conditions d'utilisation <span class="text-danger">*</span>
+          </label>
+        </div>
+        {% if form.terms_accepted.errors %}
+        <div class="text-danger small mt-1">{{ form.terms_accepted.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Sécurité -->
+      <div class="section-heading"><span class="step-badge" id="security-step">3</span> Sécurité</div>
+      <div class="row g-3">
+        <div class="col-6">
+          <label class="form-label">Mot de passe *</label>
+          <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" required>
+          {% if form.password1.errors %}<div class="invalid-feedback">{{ form.password1.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Confirmer *</label>
+          <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" required>
+          {% if form.password2.errors %}<div class="invalid-feedback">{{ form.password2.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-register mt-4">
+        <i class="bi bi-person-check-fill me-2"></i>Créer mon compte
+      </button>
+    </form>
+
+    <div class="text-center mt-3" style="font-size:.875rem;color:#64748B;">
+      Déjà un compte ?
+      <a href="{% url 'accounts:login' %}" style="color:#4F46E5;font-weight:600;text-decoration:none;">Se connecter</a>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function selectRole(role) {
-        document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
-        document.getElementById('role-' + role).classList.add('selected');
-        document.getElementById('roleInput').value = role;
-
-        if (role === 'teacher') {
-            document.getElementById('teacher-fields').style.display = '';
-            document.getElementById('student-fields').style.display = 'none';
-        } else {
-            document.getElementById('teacher-fields').style.display = 'none';
-            document.getElementById('student-fields').style.display = '';
-        }
-    }
-
-    // Pre-select based on server response
-    {% if form.role.value == 'student' %}selectRole('student');{% endif %}
+  function selectRole(role) {
+    document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+    document.getElementById('role-' + role).classList.add('selected');
+    document.getElementById('roleInput').value = role;
+    const isStudent = role === 'student';
+    document.getElementById('teacher-fields').style.display = isStudent ? 'none' : '';
+    document.getElementById('student-fields').style.display = isStudent ? '' : 'none';
+    document.getElementById('security-step').textContent = isStudent ? '5' : '3';
+    const cb = document.getElementById('id_terms_accepted');
+    if (cb) cb.required = isStudent;
+  }
+  {% if form.role.value == 'student' %}selectRole('student');{% endif %}
 </script>
 </body>
 </html>

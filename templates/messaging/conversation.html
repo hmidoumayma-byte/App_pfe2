@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% block title %}{{ conv.subject }}{% endblock %}{% block page_title %}{{ conv.subject }}{% endblock %}
+{% block content %}
+<div class='card mb-3' style='max-height:500px;overflow-y:auto;' id='chatBox'><div class='card-body'>
+{% for msg in msgs %}
+<div class='d-flex {% if msg.sender == request.user %}justify-content-end{% endif %} mb-3'>
+  <div style='max-width:70%;'>
+    <div class='{% if msg.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}' style='border-radius:12px;padding:10px 14px;'>
+      <div style='font-size:.8rem;font-weight:600;margin-bottom:4px;{% if msg.sender == request.user %}opacity:.8{% else %}color:#6B1F2A{% endif %}'>{{ msg.sender.get_full_name }}</div>
+      <div style='font-size:.9rem;'>{{ msg.content }}</div>
+    </div>
+    <div class='text-muted' style='font-size:.7rem;margin-top:3px;{% if msg.sender == request.user %}text-align:right{% endif %}'>
+      {{ msg.sent_at|date:'d/m H:i' }}{% if msg.sender == request.user and msg.is_read %} Lu{% endif %}</div>
+  </div>
+</div>{% endfor %}
+</div></div>
+<form method='post' class='d-flex gap-2'>{% csrf_token %}
+  <input type='text' name='content' class='form-control' placeholder='Ecrire un message...' required autofocus>
+  <button type='submit' class='btn btn-primary'><i class='bi bi-send-fill'></i></button>
+</form>
+{% endblock %}{% block extra_js %}<script>const b=document.getElementById('chatBox');if(b)b.scrollTop=b.scrollHeight;</script>{% endblock %}

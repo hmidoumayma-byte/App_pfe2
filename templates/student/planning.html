@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Planning{% endblock %}{% block page_title %}Mon Planning{% endblock %}
+{% block extra_css %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet'>
+{% endblock %}
+{% block content %}
+<div class='row g-4'>
+  <div class='col-md-8'><div class='card'>
+    <div class='card-header fw-bold'><i class='bi bi-calendar3 me-2 text-primary'></i>Calendrier</div>
+    <div class='card-body'><div id='calendar'></div></div>
+  </div></div>
+  <div class='col-md-4'><div class='card'>
+    <div class='card-header fw-bold'><i class='bi bi-clock me-2 text-primary'></i>Prochaines seances</div>
+    <div class='card-body p-0'>
+      {% for s in upcoming_sessions %}
+      <div class='p-3 border-bottom'><div class='d-flex justify-content-between'>
+        <div><div class='fw-semibold' style='font-size:.88rem;color:#6B1F2A;'>{{ s.module.code }}</div>
+          <div class='text-muted small'>{{ s.get_session_type_display }}</div>
+          <div class='text-muted small'><i class='bi bi-geo-alt'></i> {{ s.room|default:'—' }}</div></div>
+        <div class='text-end'><div class='fw-semibold small'>{{ s.date|date:'d/m' }}</div>
+          <div class='text-muted' style='font-size:.75rem;'>{{ s.start_time|time:'H:i' }}–{{ s.end_time|time:'H:i' }}</div></div>
+      </div></div>
+      {% empty %}<div class='p-3 text-center text-muted small'>Aucune seance a venir.</div>
+      {% endfor %}
+    </div></div></div>
+</div>
+<div class='modal fade' id='eventModal' tabindex='-1'><div class='modal-dialog modal-sm'><div class='modal-content'>
+  <div class='modal-header'><h5 class='modal-title' id='eventTitle'>Seance</h5><button class='btn-close' data-bs-dismiss='modal'></button></div>
+  <div class='modal-body'><p><strong>Module :</strong> <span id='eventModule'></span></p>
+    <p><strong>Salle :</strong> <span id='eventRoom'></span></p>
+    <p><strong>Statut :</strong> <span id='eventStatus'></span></p></div>
+</div></div></div>
+{% endblock %}
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+const events = {{ events_json|safe }};
+const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+const cal = new FullCalendar.Calendar(document.getElementById('calendar'), {
+  initialView: 'dayGridMonth', locale: 'fr',
+  headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek' },
+  events: events,
+  eventClick: function(info) {
+    document.getElementById('eventTitle').textContent = info.event.title;
+    document.getElementById('eventModule').textContent = info.event.extendedProps.module;
+    document.getElementById('eventRoom').textContent = info.event.extendedProps.room || '—';
+    document.getElementById('eventStatus').textContent = info.event.extendedProps.status;
+    modal.show();
+  }
+});
+cal.render();
+</script>{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}{% block title %}Mes statistiques{% endblock %}{% block page_title %}Mes Statistiques Personnelles{% endblock %}
+{% block content %}
+{% if recs %}
+<div class='mb-4'><div class='fw-bold mb-2'>Recommandations IA</div>
+  {% for rec in recs %}
+  <div class='alert alert-{{ rec.level }} py-2 mb-2'>
+    <strong>{{ rec.icon }} {{ rec.msg }}</strong><br><small>{{ rec.action }}</small>
+  </div>
+  {% endfor %}
+</div>{% endif %}
+{% for stat in module_stats %}
+<div class='card mb-4'>
+  <div class='card-header d-flex justify-content-between'>
+    <strong style='color:#6B1F2A;'>{{ stat.module.code }} — {{ stat.module.name }}</strong>
+    <span class='badge {% if stat.better_than_promo %}bg-success{% else %}bg-warning text-dark{% endif %}'>
+      {% if stat.better_than_promo %}Mieux que la promo{% else %}Sous la promo{% endif %}</span>
+  </div>
+  <div class='card-body'>
+    <div class='row g-3 mb-3'>
+      <div class='col-4 text-center'><div class='fw-bold fs-5 {% if stat.my_pct >= 50 %}text-danger{% elif stat.my_pct >= 30 %}text-warning{% else %}text-success{% endif %}'>{{ stat.my_pct }}%</div><div class='text-muted small'>Mon taux</div></div>
+      <div class='col-4 text-center'><div class='fw-bold fs-5 text-primary'>{{ stat.promo_pct }}%</div><div class='text-muted small'>Moy. promo</div></div>
+      <div class='col-4 text-center'><div class='fw-bold fs-5'>{{ stat.my_abs }}/{{ stat.total }}</div><div class='text-muted small'>Absences</div></div>
+    </div>
+    <div class='mb-1' style='font-size:.8rem;'>Mon taux ({{ stat.my_pct }}%)</div>
+    <div class='progress mb-2'><div class='progress-bar {% if stat.my_pct >= 50 %}bg-danger{% elif stat.my_pct >= 30 %}bg-warning{% else %}bg-success{% endif %}' style='width:{{ stat.my_pct }}%'></div></div>
+    <div class='mb-1' style='font-size:.8rem;'>Promo ({{ stat.promo_pct }}%)</div>
+    <div class='progress mb-3'><div class='progress-bar bg-info' style='width:{{ stat.promo_pct }}%'></div></div>
+    <div class='mb-1 fw-semibold small text-muted'>Evolution 8 semaines</div>
+    <canvas id='chart_{{ forloop.counter }}' height='60'></canvas>
+  </div>
+</div>
+<script>(function(){new Chart(document.getElementById('chart_{{ forloop.counter }}'),{type:'line',data:{labels:['S-8','S-7','S-6','S-5','S-4','S-3','S-2','S-1'],datasets:[{label:'Absences',data:{{ stat.weekly|safe }},borderColor:'#8B3042',tension:.4,fill:true,backgroundColor:'rgba(139,48,66,.08)',pointRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}});})();</script>
+{% endfor %}{% endblock %}

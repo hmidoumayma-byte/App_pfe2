@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Utilisateurs{% endblock %}
+{% block page_title %}Gestion des Utilisateurs{% endblock %}
+{% block content %}
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <div class='d-flex gap-2'>
+    <a href='?role=all' class='btn btn-sm {% if role_filter=="all" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Tous</a>
+    <a href='?role=student' class='btn btn-sm {% if role_filter=="student" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Etudiants</a>
+    <a href='?role=teacher' class='btn btn-sm {% if role_filter=="teacher" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Enseignants</a>
+  </div>
+  <div class='d-flex gap-2'>
+    <form method='get' class='d-flex gap-2'>
+      <input type='hidden' name='role' value='{{ role_filter }}'>
+      <input type='text' name='q' value='{{ search }}' placeholder='Rechercher...'
+             class='form-control form-control-sm' style='width:200px;'>
+      <button class='btn btn-sm btn-outline-primary'><i class='bi bi-search'></i></button>
+    </form>
+    <a href='{% url "accounts:register" %}' class='btn btn-primary btn-sm'>
+      <i class='bi bi-person-plus me-1'></i>Ajouter</a>
+  </div>
+</div>
+<div class='card'><div class='table-responsive'>
+  <table class='table table-hover mb-0'>
+    <thead><tr><th>Utilisateur</th><th>Role</th><th>Email</th><th>Departement</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for u in users %}
+    <tr>
+      <td><strong>{{ u.get_full_name }}</strong><br><small class='text-muted'>@{{ u.username }}</small></td>
+      <td><span class='badge {% if u.role=="admin" %}bg-danger-soft{% elif u.role=="teacher" %}bg-info-soft{% else %}bg-success-soft{% endif %}'>{{ u.get_role_display }}</span></td>
+      <td style='font-size:.82rem;'>{{ u.email }}</td>
+      <td style='font-size:.82rem;'>{% if u.is_student %}{{ u.student_profile.department }}{% elif u.is_teacher %}{{ u.teacher_profile.department }}{% else %}—{% endif %}</td>
+      <td><span class='badge {% if u.is_active %}bg-success-soft{% else %}bg-danger-soft{% endif %}'>{% if u.is_active %}Actif{% else %}Inactif{% endif %}</span></td>
+      <td>
+        <div class='d-flex gap-1'>
+          <a href='{% url "attendance:admin_user_edit" u.id %}' class='btn btn-sm btn-outline-secondary' title='Modifier'><i class='bi bi-pencil'></i></a>
+          <!-- Reset MDP Modal -->
+          <button class='btn btn-sm btn-outline-warning' data-bs-toggle='modal' data-bs-target='#rm{{ u.id }}'><i class='bi bi-key'></i></button>
+          <!-- Supprimer -->
+          <form method='post' action='{% url "attendance:admin_user_delete" u.id %}' onsubmit='return confirm("Supprimer ?")'>{% csrf_token %}
+            <button type='submit' class='btn btn-sm btn-outline-danger'><i class='bi bi-trash'></i></button>
+          </form>
+        </div>
+        <!-- Modal reset -->
+        <div class='modal fade' id='rm{{ u.id }}' tabindex='-1'><div class='modal-dialog modal-sm'><div class='modal-content'>
+          <div class='modal-header'><h6 class='modal-title'>Reset MDP</h6></div>
+          <form method='post' action='{% url "attendance:admin_reset_password" u.id %}'>{% csrf_token %}
+            <div class='modal-body'><input type='password' name='new_password' class='form-control' placeholder='Nouveau mot de passe' required minlength='6'></div>
+            <div class='modal-footer'><button class='btn btn-sm btn-outline-secondary' data-bs-dismiss='modal'>Annuler</button><button type='submit' class='btn btn-sm btn-primary'>OK</button></div>
+          </form></div></div></div>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody></table>
+</div></div>
+{% endblock %}

@@ -31,5 +31,13 @@ urlpatterns = [
     path('admin/download-template/', views.download_template, name='download_template'),
     path('admin/group-list/', views.admin_group_list, name='admin_group_list'),
     path('teacher/group-list/', views.teacher_group_list, name='teacher_group_list'),
+    path('admin/users/', views.admin_users, name='admin_users'),
+    path('admin/users/<int:user_id>/edit/', views.admin_user_edit, name='admin_user_edit'),
+    path('admin/users/<int:user_id>/delete/', views.admin_user_delete, name='admin_user_delete'),
+    path('admin/users/<int:user_id>/reset-password/', views.admin_reset_password, name='admin_reset_password'),
+    path('teacher/statistics/', views.teacher_statistics, name='teacher_statistics'),
+    path('student/planning/', views.student_planning, name='student_planning'),
+    path('student/statistics/', views.student_statistics, name='student_statistics'),
+
 
 ]

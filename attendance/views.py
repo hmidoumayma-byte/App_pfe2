@@ -302,6 +302,81 @@ def mark_attendance_manual(request, session_id):
 
     return JsonResponse({'success': False})
 
+# attendance/views.py — AJOUTER cette fonction
+
+@login_required
+@teacher_required
+def teacher_statistics(request):
+    teacher = request.user.teacher_profile
+    modules = Module.objects.filter(teacher=teacher, is_active=True)
+    period = request.GET.get('period', 'month')
+    export = request.GET.get('export', '')
+    from datetime import date, timedelta
+    today = date.today()
+    date_from = today - timedelta(days=90) if period == 'month' else (
+               today - timedelta(weeks=4) if period == 'week' else None)
+
+    module_stats = []
+    for module in modules:
+        qs = Attendance.objects.filter(session__module=module)
+        if date_from: qs = qs.filter(session__date__gte=date_from)
+        total = qs.count()
+        absent = qs.filter(status='absent').count()
+        present = qs.filter(status='present').count()
+        late = qs.filter(status='late').count()
+        rate = round((absent/total*100),1) if total > 0 else 0
+        motifs = Justification.objects.filter(
+            attendance__session__module=module
+        ).values('reason').annotate(count=Count('reason')).order_by('-count')
+        weekly = []
+        for i in range(7, -1, -1):
+            w_start = today - timedelta(weeks=i+1)
+            w_end   = today - timedelta(weeks=i)
+            weekly.append(Attendance.objects.filter(
+                session__module=module, session__date__gte=w_start,
+                session__date__lt=w_end, status='absent').count())
+        # Comparaison groupes
+        students_qs = StudentProfile.objects.filter(
+            year_of_study=module.year_of_study, department=module.department)
+        groups = students_qs.values_list('group', flat=True).distinct()
+        group_data = []
+        for g in groups:
+            g_stu = students_qs.filter(group=g)
+            g_abs = Attendance.objects.filter(
+                student__in=g_stu, session__module=module, status='absent').count()
+            g_tot = Attendance.objects.filter(
+                student__in=g_stu, session__module=module).count()
+            group_data.append({'group': g, 'rate': round((g_abs/g_tot*100),1) if g_tot > 0 else 0})
+        module_stats.append({'module':module,'total':total,'absent':absent,
+            'present':present,'late':late,'rate':rate,
+            'motifs':list(motifs),'weekly':json.dumps(weekly),'group_data':group_data})
+
+    if export == 'excel': return export_teacher_stats_excel(module_stats, teacher)
+    return render(request, 'teacher/statistics.html',
+                  {'module_stats':module_stats,'period':period,'modules':modules})
+
+
+def export_teacher_stats_excel(module_stats, teacher):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Statistiques'
+    ws['A1'] = f'Statistiques — {teacher.user.get_full_name()}'
+    ws['A1'].font = Font(bold=True, size=13)
+    ws.append([])
+    headers = ['Module', 'Total', 'Presences', 'Absences', 'Retards', 'Taux (%)']
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=h)
+        cell.fill = PatternFill(start_color='6B1F2A', end_color='6B1F2A', fill_type='solid')
+        cell.font = Font(color='FFFFFF', bold=True)
+    for stat in module_stats:
+        ws.append([stat['module'].name, stat['total'], stat['present'],
+                   stat['absent'], stat['late'], stat['rate']])
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=statistiques_enseignant.xlsx'
+    wb.save(response)
+    return response
+
 
 # ===== STUDENT VIEWS =====
 
@@ -431,6 +506,83 @@ def student_history(request):
     return render(request, 'student/history.html', {
         'attendances': all_attendances,
     })
+
+# attendance/views.py — AJOUTER
+
+@login_required
+@student_required
+def student_planning(request):
+    student = request.user.student_profile
+    from datetime import date
+    upcoming = Session.objects.filter(
+        module__year_of_study=student.year_of_study,
+        module__department=student.department,
+        date__gte=date.today()
+    ).select_related('module').order_by('date','start_time')[:20]
+
+    events = []
+    for s in upcoming:
+        att = Attendance.objects.filter(student=student, session=s).first()
+        color = '#5D9B84' if att and att.status=='present' else (
+                '#C0404E' if att and att.status=='absent' else '#8B3042')
+        events.append({'title': s.module.code+' — '+s.get_session_type_display(),
+            'start': str(s.date)+'T'+str(s.start_time),
+            'end':   str(s.date)+'T'+str(s.end_time), 'color': color,
+            'extendedProps': {'module': s.module.name, 'room': s.room,
+                'status': att.get_status_display() if att else 'Pas encore'}})
+
+    return render(request, 'student/planning.html', {
+        'events_json': json.dumps(events), 'upcoming_sessions': upcoming})
+
+
+@login_required
+@student_required
+def student_statistics(request):
+    student = request.user.student_profile
+    from datetime import date, timedelta
+    modules = Module.objects.filter(
+        year_of_study=student.year_of_study, department=student.department)
+    module_stats = []
+    for module in modules:
+        total = Session.objects.filter(module=module).count()
+        my_abs = Attendance.objects.filter(
+            student=student, session__module=module, status='absent').count()
+        my_pct = round((my_abs/total*100),1) if total > 0 else 0
+        promo_abs = Attendance.objects.filter(
+            session__module=module, status='absent').count()
+        promo_tot = Attendance.objects.filter(session__module=module).count()
+        promo_pct = round((promo_abs/promo_tot*100),1) if promo_tot > 0 else 0
+        weekly = []
+        for i in range(7,-1,-1):
+            w_s = date.today()-timedelta(weeks=i+1)
+            w_e = date.today()-timedelta(weeks=i)
+            weekly.append(Attendance.objects.filter(
+                student=student, session__module=module,
+                session__date__gte=w_s, session__date__lt=w_e, status='absent').count())
+        module_stats.append({'module':module,'total':total,'my_abs':my_abs,
+            'my_pct':my_pct,'promo_pct':promo_pct,
+            'better_than_promo':my_pct<promo_pct,'weekly':json.dumps(weekly)})
+    recs = generate_student_recommendations(module_stats)
+    return render(request, 'student/statistics.html', {'module_stats':module_stats,'recs':recs})
+
+
+def generate_student_recommendations(module_stats):
+    recs = []
+    for stat in module_stats:
+        pct, promo, module = stat['my_pct'], stat['promo_pct'], stat['module']
+        if pct >= 50:
+            recs.append({'icon':'🔴','level':'danger',
+                'msg':f'{module.name}: Taux critique ({pct}%).',
+                'action':'Contactez votre administration immediatement.'})
+        elif pct >= 30:
+            recs.append({'icon':'🟡','level':'warning',
+                'msg':f'{module.name}: Seuil alerte ({pct}%).',
+                'action':f'Au-dessus de la promo ({promo}%). Reduisez vos absences.'})
+        elif pct < promo:
+            recs.append({'icon':'🟢','level':'success',
+                'msg':f'{module.name}: Excellent ({pct}%), mieux que la promo ({promo}%).',
+                'action':'Continuez ainsi !'})
+    return recs
 
 
 # ===== ADMIN VIEWS =====
@@ -783,3 +935,73 @@ def admin_student_detail(request, student_id):
         'student': student,
         'absences': absences,
     })
+
+# attendance/views.py — AJOUTER ces fonctions
+
+@login_required
+@admin_required
+def admin_users(request):
+    role_filter = request.GET.get('role', 'all')
+    search = request.GET.get('q', '')
+    users = User.objects.select_related('student_profile','teacher_profile').all().order_by('role','last_name')
+    if role_filter != 'all': users = users.filter(role=role_filter)
+    if search:
+        users = users.filter(Q(first_name__icontains=search)|Q(last_name__icontains=search)|
+                             Q(email__icontains=search)|Q(username__icontains=search))
+    return render(request, 'admin_panel/users.html', {'users':users,'role_filter':role_filter,'search':search})
+
+@login_required
+@admin_required
+def admin_user_edit(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        target.first_name = request.POST.get('first_name', target.first_name)
+        target.last_name  = request.POST.get('last_name',  target.last_name)
+        target.email      = request.POST.get('email',      target.email)
+        target.is_active  = 'is_active' in request.POST
+        target.save()
+        if target.is_student():
+            p = target.student_profile
+            p.department    = request.POST.get('department', p.department)
+            p.year_of_study = request.POST.get('year_of_study', p.year_of_study)
+            p.group         = request.POST.get('group', p.group)
+            p.save()
+        elif target.is_teacher():
+            p = target.teacher_profile
+            p.department     = request.POST.get('department', p.department)
+            p.specialization = request.POST.get('specialization', p.specialization)
+            p.save()
+        from core_settings.models import ActionLog
+        ActionLog.objects.create(user=request.user, action='update_user',
+            description=f'Modification: {target.get_full_name()}',
+            ip_address=request.META.get('REMOTE_ADDR'))
+        messages.success(request, 'Utilisateur mis a jour.')
+        return redirect('attendance:admin_users')
+    return render(request, 'admin_panel/user_edit.html', {'target_user': target})
+
+@login_required
+@admin_required
+def admin_user_delete(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        name = target.get_full_name()
+        target.delete()
+        from core_settings.models import ActionLog
+        ActionLog.objects.create(user=request.user, action='delete_user',
+            description=f'Suppression: {name}', ip_address=request.META.get('REMOTE_ADDR'))
+        messages.success(request, f'Utilisateur {name} supprime.')
+    return redirect('attendance:admin_users')
+
+@login_required
+@admin_required
+def admin_reset_password(request, user_id):
+    target = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        pwd = request.POST.get('new_password', '')
+        if len(pwd) >= 6:
+            target.set_password(pwd)
+            target.save()
+            messages.success(request, f'Mot de passe reinitialise pour {target.get_full_name()}.')
+        else:
+            messages.error(request, 'Mot de passe trop court (min 6 caracteres).')
+    return redirect('attendance:admin_users')
