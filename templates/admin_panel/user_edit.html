@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Modifier — {{ target_user.get_full_name }}{% endblock %}
+{% block page_title %}Modifier l'utilisateur{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'attendance:admin_users' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Retour
+  </a>
+  <div>
+    <h5 class="mb-0 fw-bold">{{ target_user.get_full_name }}</h5>
+    <small class="text-muted">@{{ target_user.username }} — {{ target_user.get_role_display }}</small>
+  </div>
+</div>
+
+<div class="card" style="max-width:750px;">
+  <div class="card-header">
+    <i class="bi bi-person-gear me-2"></i>Informations du compte
+  </div>
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- Informations de base -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Prénom</label>
+          <input type="text" name="first_name" class="form-control"
+                 value="{{ target_user.first_name }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Nom</label>
+          <input type="text" name="last_name" class="form-control"
+                 value="{{ target_user.last_name }}" required>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ target_user.email }}">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="is_active"
+                   {% if target_user.is_active %}checked{% endif %} id="isActive">
+            <label class="form-check-label fw-semibold" for="isActive">
+              Compte actif
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section étudiant -->
+      {% if target_user.is_student %}
+      <hr>
+      <h6 class="fw-bold text-muted mb-3">
+        <i class="bi bi-mortarboard me-2"></i>Profil étudiant
+      </h6>
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Groupe académique</label>
+          <select name="groupe_academique" class="form-select">
+            <option value="">-- Non assigné --</option>
+            {% for g in groupes_academiques %}
+            <option value="{{ g.pk }}"
+              {% if target_user.student_profile.groupe_academique_id == g.pk %}selected{% endif %}>
+              {{ g.niveau.filiere.code }} — {{ g.niveau.name }} — {{ g.name }}
+            </option>
+            {% endfor %}
+          </select>
+          <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>
+            Assigner un groupe met à jour automatiquement le département et l'année.
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label fw-semibold">Département</label>
+          <input type="text" name="department" class="form-control"
+                 value="{{ target_user.student_profile.department }}"
+                 placeholder="Ex: Informatique">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Année</label>
+          <input type="number" name="year_of_study" class="form-control"
+                 value="{{ target_user.student_profile.year_of_study }}"
+                 min="1" max="5">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Groupe (ancien)</label>
+          <input type="text" name="group" class="form-control"
+                 value="{{ target_user.student_profile.group }}"
+                 placeholder="Ex: G1">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Numéro étudiant</label>
+          <input type="text" name="student_id" class="form-control"
+                 value="{{ target_user.student_profile.student_id }}"
+                 placeholder="Ex: 2024001">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Téléphone</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ target_user.student_profile.phone }}"
+                 placeholder="Ex: 06 12 34 56 78">
+        </div>
+
+      </div>
+      {% endif %}
+
+      <!-- Section enseignant -->
+      {% if target_user.is_teacher %}
+      <hr>
+      <h6 class="fw-bold text-muted mb-3">
+        <i class="bi bi-briefcase me-2"></i>Profil enseignant
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Département</label>
+          <input type="text" name="department" class="form-control"
+                 value="{{ target_user.teacher_profile.department }}"
+                 placeholder="Ex: Informatique">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Spécialisation</label>
+          <input type="text" name="specialization" class="form-control"
+                 value="{{ target_user.teacher_profile.specialization }}"
+                 placeholder="Ex: Réseaux, IA">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Téléphone</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ target_user.teacher_profile.phone }}"
+                 placeholder="Ex: 06 12 34 56 78">
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Section admin -->
+      {% if target_user.is_admin %}
+      <hr>
+      <div class="alert alert-warning py-2" style="font-size:.85rem;">
+        <i class="bi bi-shield-exclamation me-2"></i>
+        Ce compte est administrateur. Soyez prudent lors des modifications.
+      </div>
+      {% endif %}
+
+      <!-- Boutons -->
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle me-2"></i>Sauvegarder
+        </button>
+        <a href="{% url 'attendance:admin_users' %}" class="btn btn-outline-secondary">
+          Annuler
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+{% endblock %}

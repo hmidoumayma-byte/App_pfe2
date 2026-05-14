@@ -48,17 +48,21 @@ def admin_required(func):
 # ===== TEACHER VIEWS =====
 
 @login_required
-@teacher_required
+@teacher_required  
 def teacher_modules(request):
-    try:
-        teacher = request.user.teacher_profile
-        modules = Module.objects.filter(teacher=teacher, is_active=True)
-    except TeacherProfile.DoesNotExist:
-        modules = []
-        messages.warning(request, "Profil enseignant non trouvé.")
-
+    teacher = request.user.teacher_profile
+    modules = Module.objects.filter(
+        teacher=teacher, is_active=True
+    ).prefetch_related('groupes', 'groupes__niveau__filiere')
+    
+    # Pour chaque module, récupérer les étudiants via les groupes académiques
+    for module in modules:
+        groupe_ids = module.groupes.values_list('id', flat=True)
+        module.nb_etudiants = StudentProfile.objects.filter(
+            groupe_academique_id__in=groupe_ids
+        ).count()
+    
     return render(request, 'teacher/modules.html', {'modules': modules})
-
 
 @login_required
 @teacher_required
@@ -962,9 +966,23 @@ def admin_user_edit(request, user_id):
         target.save()
         if target.is_student():
             p = target.student_profile
-            p.department    = request.POST.get('department', p.department)
+            p.department = request.POST.get('department', p.department)
             p.year_of_study = request.POST.get('year_of_study', p.year_of_study)
-            p.group         = request.POST.get('group', p.group)
+            p.group = request.POST.get('group', p.group)
+            
+            # NOUVEAU — synchroniser avec le groupe académique
+            groupe_id = request.POST.get('groupe_academique')
+            if groupe_id:
+                from academic.models import Groupe
+                try:
+                    groupe_obj = Groupe.objects.get(pk=groupe_id)
+                    p.groupe_academique = groupe_obj
+                    # Mettre à jour les anciens champs texte automatiquement
+                    p.department = groupe_obj.niveau.filiere.name
+                    p.year_of_study = groupe_obj.niveau.year_number
+                    p.group = groupe_obj.name
+                except Groupe.DoesNotExist:
+                    pass
             p.save()
         elif target.is_teacher():
             p = target.teacher_profile
@@ -977,7 +995,9 @@ def admin_user_edit(request, user_id):
             ip_address=request.META.get('REMOTE_ADDR'))
         messages.success(request, 'Utilisateur mis a jour.')
         return redirect('attendance:admin_users')
-    return render(request, 'admin_panel/user_edit.html', {'target_user': target})
+    return render(request, 'admin_panel/user_edit.html', {'target_user': target,
+    'groupes_academiques': GroupeAcademique.objects.select_related('niveau__filiere').filter(is_active=True)
+})
 
 @login_required
 @admin_required

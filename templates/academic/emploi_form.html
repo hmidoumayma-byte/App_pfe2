@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter créneau{% endblock %}
+{% block page_title %}Ajouter un créneau à l'emploi du temps{% endblock %}
+{% block content %}
+<div class="card" style="max-width:680px;">
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Groupe</label>
+          <select name="groupe" class="form-select" required>
+            <option value="">-- Choisir --</option>
+            {% for g in groupes %}
+            <option value="{{ g.pk }}">{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Enseignant</label>
+          <select name="teacher" class="form-select" required>
+            <option value="">-- Choisir --</option>
+            {% for t in teachers %}
+            <option value="{{ t.pk }}">{{ t.user.get_full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Matière</label>
+          <input type="text" name="module_name" class="form-control"
+                 placeholder="Ex: Analyse 2, Algorithmique" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Salle</label>
+          <select name="salle" class="form-select">
+            <option value="">-- Sans salle --</option>
+            {% for s in salles %}
+            <option value="{{ s.pk }}">{{ s.name }} ({{ s.capacity }} places)</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Type de séance</label>
+          <select name="session_type" class="form-select">
+            {% for val, label in types %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Jour</label>
+          <select name="jour" class="form-select" required>
+            <option value="">-- Choisir --</option>
+            {% for val, label in jours %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Semestre</label>
+          <select name="semester" class="form-select">
+            <option value="1">Semestre 1</option>
+            <option value="2">Semestre 2</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Heure début</label>
+          <input type="time" name="heure_debut" class="form-control" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Heure fin</label>
+          <input type="time" name="heure_fin" class="form-control" required>
+        </div>
+
+      </div>
+
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-calendar-plus me-2"></i>Ajouter le créneau
+        </button>
+        <a href="{% url 'academic:emploi_du_temps' %}" class="btn btn-outline-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

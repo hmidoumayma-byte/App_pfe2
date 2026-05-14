@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Salle{% endblock %}
+{% block page_title %}{{ action }} une salle{% endblock %}
+{% block content %}
+<div class="card" style="max-width:580px;">
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nom de la salle</label>
+        <input type="text" name="name" class="form-control"
+               value="{% if salle %}{{ salle.name }}{% endif %}"
+               placeholder="Ex: Salle A12, Amphi 1, Labo Info" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Type</label>
+        <select name="room_type" class="form-select">
+          <option value="salle" {% if not salle or salle.room_type == "salle" %}selected{% endif %}>Salle de cours</option>
+          <option value="amphi" {% if salle and salle.room_type == "amphi" %}selected{% endif %}>Amphithéâtre</option>
+          <option value="labo" {% if salle and salle.room_type == "labo" %}selected{% endif %}>Laboratoire</option>
+          <option value="tp" {% if salle and salle.room_type == "tp" %}selected{% endif %}>Salle TP</option>
+        </select>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label class="form-label fw-semibold">Capacité</label>
+          <input type="number" name="capacity" class="form-control"
+                 value="{% if salle %}{{ salle.capacity }}{% else %}30{% endif %}"
+                 min="1" max="1000">
+        </div>
+        <div class="col-6">
+          <label class="form-label fw-semibold">Étage</label>
+          <input type="text" name="floor" class="form-control"
+                 value="{% if salle %}{{ salle.floor }}{% endif %}"
+                 placeholder="Ex: RDC, 1er">
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Bâtiment</label>
+        <input type="text" name="building" class="form-control"
+               value="{% if salle %}{{ salle.building }}{% endif %}"
+               placeholder="Ex: Bâtiment A">
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle me-2"></i>{{ action }}
+        </button>
+        <a href="{% url 'academic:salle_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

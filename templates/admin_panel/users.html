@@ -4,9 +4,10 @@
 {% block content %}
 <div class='d-flex justify-content-between align-items-center mb-4'>
   <div class='d-flex gap-2'>
-    <a href='?role=all' class='btn btn-sm {% if role_filter=="all" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Tous</a>
-    <a href='?role=student' class='btn btn-sm {% if role_filter=="student" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Etudiants</a>
-    <a href='?role=teacher' class='btn btn-sm {% if role_filter=="teacher" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Enseignants</a>
+    <!-- APRES (correct) -->
+    <a href='?role=all' class='btn btn-sm {% if role_filter == "all" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Tous</a>
+    <a href='?role=student' class='btn btn-sm {% if role_filter == "student" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Etudiants</a>
+    <a href='?role=teacher' class='btn btn-sm {% if role_filter == "teacher" %}btn-primary{% else %}btn-outline-secondary{% endif %}'>Enseignants</a>
   </div>
   <div class='d-flex gap-2'>
     <form method='get' class='d-flex gap-2'>
@@ -15,8 +16,8 @@
              class='form-control form-control-sm' style='width:200px;'>
       <button class='btn btn-sm btn-outline-primary'><i class='bi bi-search'></i></button>
     </form>
-    <a href='{% url "accounts:register" %}' class='btn btn-primary btn-sm'>
-      <i class='bi bi-person-plus me-1'></i>Ajouter</a>
+   <!-- <a href='{% url "accounts:register" %}' class='btn btn-primary btn-sm'>
+      <i class='bi bi-person-plus me-1'></i>Ajouter</a>-->
   </div>
 </div>
 <div class='card'><div class='table-responsive'>
@@ -26,7 +27,7 @@
     {% for u in users %}
     <tr>
       <td><strong>{{ u.get_full_name }}</strong><br><small class='text-muted'>@{{ u.username }}</small></td>
-      <td><span class='badge {% if u.role=="admin" %}bg-danger-soft{% elif u.role=="teacher" %}bg-info-soft{% else %}bg-success-soft{% endif %}'>{{ u.get_role_display }}</span></td>
+      <td><span class='badge {% if u.role == "admin" %}bg-danger-soft{% elif u.role == "teacher" %}bg-info-soft{% else %}bg-success-soft{% endif %}'>{{ u.get_role_display }}</span></td>
       <td style='font-size:.82rem;'>{{ u.email }}</td>
       <td style='font-size:.82rem;'>{% if u.is_student %}{{ u.student_profile.department }}{% elif u.is_teacher %}{{ u.teacher_profile.department }}{% else %}—{% endif %}</td>
       <td><span class='badge {% if u.is_active %}bg-success-soft{% else %}bg-danger-soft{% endif %}'>{% if u.is_active %}Actif{% else %}Inactif{% endif %}</span></td>

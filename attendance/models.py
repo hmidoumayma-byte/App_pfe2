@@ -30,6 +30,19 @@ class Module(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
+    # NOUVEAU — lien vers les groupes académiques
+    groupes = models.ManyToManyField(
+        'academic.Groupe',
+        blank=True,
+        related_name='modules'
+    )
+    # NOUVEAU — lien vers l'entrée emploi du temps
+    emploi_du_temps = models.ForeignKey(
+        'academic.EmploiDuTemps',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='module_attendance'
+    )
     def __str__(self):
         return f"{self.code} - {self.name}"
 
@@ -64,6 +77,13 @@ class Session(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # NOUVEAU — lien vers la salle académique
+    salle = models.ForeignKey(
+        'academic.Salle',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='sessions'
+    )
     def __str__(self):
         return f"{self.module.code} - {self.date} {self.start_time}"
 

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Groupe{% endblock %}
+{% block page_title %}{{ action }} un groupe{% endblock %}
+{% block content %}
+<div class="card" style="max-width:580px;">
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Niveau</label>
+        <select name="niveau" class="form-select" required>
+          <option value="">-- Choisir un niveau --</option>
+          {% for n in niveaux %}
+          <option value="{{ n.pk }}" {% if groupe and groupe.niveau.pk == n.pk %}selected{% endif %}>
+            {{ n.filiere.code }} — {{ n.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nom du groupe</label>
+        <input type="text" name="name" class="form-control"
+               value="{% if groupe %}{{ groupe.name }}{% endif %}"
+               placeholder="Ex: G1, G2, TP1" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nombre max d'étudiants</label>
+        <input type="number" name="max_students" class="form-control"
+               value="{% if groupe %}{{ groupe.max_students }}{% else %}30{% endif %}"
+               min="1" max="200">
+      </div>
+      {% if groupe %}
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="is_active"
+               {% if groupe.is_active %}checked{% endif %}>
+        <label class="form-check-label">Actif</label>
+      </div>
+      {% endif %}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle me-2"></i>{{ action }}
+        </button>
+        <a href="{% url 'academic:groupe_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

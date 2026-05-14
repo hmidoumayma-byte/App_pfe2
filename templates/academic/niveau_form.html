@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Niveau{% endblock %}
+{% block page_title %}{{ action }} un niveau{% endblock %}
+{% block content %}
+<div class="card" style="max-width:580px;">
+  <div class="card-body p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Filière</label>
+        <select name="filiere" class="form-select" required>
+          <option value="">-- Choisir une filière --</option>
+          {% for f in filieres %}
+          <option value="{{ f.pk }}" {% if niveau and niveau.filiere.pk == f.pk %}selected{% endif %}>
+            {{ f.code }} — {{ f.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nom du niveau</label>
+        <input type="text" name="name" class="form-control"
+               value="{% if niveau %}{{ niveau.name }}{% endif %}"
+               placeholder="Ex: 1ère Année, 2ème Année" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Numéro d'année</label>
+        <select name="year_number" class="form-select" required>
+          {% for i in "12345" %}
+          <option value="{{ i }}" {% if niveau and niveau.year_number == i|add:0 %}selected{% endif %}>
+            {{ i }}ème Année
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Seuil d'absence max (%)</label>
+        <input type="number" name="max_absence_percent" class="form-control"
+               value="{% if niveau %}{{ niveau.max_absence_percent }}{% else %}30{% endif %}"
+               min="1" max="100" step="0.5">
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{{ action }}</button>
+        <a href="{% url 'academic:niveau_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

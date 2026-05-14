@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Filiere, Niveau, Groupe, Salle, EmploiDuTemps
 from accounts.models import TeacherProfile
+from attendance.models import Module
 
 def admin_required(func):
     def wrapper(request, *args, **kwargs):
@@ -126,18 +127,47 @@ def emploi_du_temps(request):
 @admin_required
 def emploi_create(request):
     if request.method == 'POST':
-        EmploiDuTemps.objects.create(
-            groupe_id=request.POST.get('groupe'),
-            teacher_id=request.POST.get('teacher'),
-            module_name=request.POST.get('module_name'),
+        groupe_id = request.POST.get('groupe')
+        teacher_id = request.POST.get('teacher')
+        module_name = request.POST.get('module_name')
+        session_type = request.POST.get('session_type', 'cours')
+        semester = request.POST.get('semester', 1)
+
+        # Créer l'entrée emploi du temps
+        entry = EmploiDuTemps.objects.create(
+            groupe_id=groupe_id,
+            teacher_id=teacher_id,
+            module_name=module_name,
             salle_id=request.POST.get('salle') or None,
             jour=request.POST.get('jour'),
             heure_debut=request.POST.get('heure_debut'),
             heure_fin=request.POST.get('heure_fin'),
-            session_type=request.POST.get('session_type','cours'),
-            semester=request.POST.get('semester',1))
-        messages.success(request, 'Creneau ajoute.')
+            session_type=session_type,
+            semester=semester
+        )
+
+        # Synchronisation — créer ou récupérer le Module dans attendance
+        groupe = entry.groupe
+        niveau = groupe.niveau
+        teacher = entry.teacher
+
+        module, created = Module.objects.get_or_create(
+            teacher=teacher,
+            code=f"{niveau.filiere.code}-{module_name[:10].upper().replace(' ','')}",
+            defaults={
+                'name': module_name,
+                'department': niveau.filiere.name,
+                'year_of_study': niveau.year_number,
+                'semester': int(semester),
+                'emploi_du_temps': entry,
+            }
+        )
+        # Lier le module au groupe académique
+        module.groupes.add(groupe)
+
+        messages.success(request, f'Créneau ajouté et module "{module_name}" synchronisé.')
         return redirect('academic:emploi_du_temps')
+
     context = {
         'groupes': Groupe.objects.filter(is_active=True).select_related('niveau__filiere'),
         'teachers': TeacherProfile.objects.select_related('user').all(),
