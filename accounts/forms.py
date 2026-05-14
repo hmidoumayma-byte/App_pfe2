@@ -57,6 +57,30 @@ class RegisterForm(UserCreationForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Téléphone'})
     )
 
+    institutional_code = forms.CharField(
+        label='Code institutionnel',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ex: USMC-GI-2024-001'
+        })
+    )
+    identity_photo = forms.ImageField(
+        label='Photo d\'identité',
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+    )
+    emergency_contact = forms.CharField(
+        label='Contact d\'urgence',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom et téléphone'})
+    )
+    terms_accepted = forms.BooleanField(
+        label='J\'accepte les conditions d\'utilisation',
+        required=True,
+        error_messages={'required': 'Vous devez accepter les conditions pour vous inscrire.'}
+    )
+
     # Student fields
     student_id = forms.CharField(
         label='Numéro Étudiant',
@@ -95,7 +119,7 @@ class RegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'role', 'phone', 'password1', 'password2']
+        fields = ['username', 'first_name', 'last_name', 'email', 'role', 'phone', 'institutional_code', 'identity_photo', 'emergency_contact', 'terms_accepted', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom d\'utilisateur'}),
         }

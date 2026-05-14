@@ -36,6 +36,23 @@ class StudentProfile(models.Model):
     group = models.CharField(max_length=10, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     address = models.TextField(blank=True)
+    # accounts/models.py — StudentProfile
+class StudentProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
+    student_id = models.CharField(max_length=20, unique=True)
+    department = models.CharField(max_length=100)
+    year_of_study = models.IntegerField(default=1)
+    group = models.CharField(max_length=10, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True)
+    # NOUVEAUX CHAMPS
+    phone_secondary = models.CharField(max_length=20, blank=True)  # Contact parent
+    emergency_contact = models.CharField(max_length=100, blank=True)
+    institutional_code = models.CharField(max_length=30, blank=True)  # Code institutionnel
+    identity_photo = models.ImageField(upload_to='student_photos/', blank=True, null=True)
+    terms_accepted = models.BooleanField(default=False)
+    terms_accepted_at = models.DateTimeField(null=True, blank=True)
+    is_approved = models.BooleanField(default=True)  # Pour approbation admin
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.student_id}"

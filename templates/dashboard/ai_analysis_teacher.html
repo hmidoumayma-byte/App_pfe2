@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Analyse IA Enseignant{% endblock %}
+{% block page_title %}Analyse Intelligente — Enseignant{% endblock %}
+{% block content %}
+
+<div class='mb-4' style='background:linear-gradient(135deg,#FAF0F2,#F5EEF0);
+     border:1px solid rgba(176,112,128,.2);border-radius:14px;padding:20px;'>
+  <div class='d-flex align-items-center gap-3'>
+    <div style='width:48px;height:48px;background:linear-gradient(135deg,#6B1F2A,#8B3042);
+         border-radius:12px;display:flex;align-items:center;justify-content:center;
+         font-size:1.4rem;flex-shrink:0;'>🤖</div>
+    <div>
+      <div class='fw-bold' style='color:#1C0E12;font-size:1rem;'>
+        Analyse des absences — Vos modules</div>
+      <div class='text-muted small'>
+        Prof. {{ teacher.user.get_full_name }} — {{ analysis_data|length }} module(s)</div>
+    </div>
+  </div>
+</div>
+
+{% if analysis_data %}
+{% for data in analysis_data %}
+<div class='card mb-4'>
+  <div class='card-header d-flex justify-content-between align-items-center'>
+    <span><strong style='color:#6B1F2A;'>{{ data.module.code }}</strong>
+      — {{ data.module.name }}</span>
+    <span class='badge
+      {% if data.absence_rate >= 50 %}bg-danger
+      {% elif data.absence_rate >= 30 %}bg-warning text-dark
+      {% else %}bg-success{% endif %}' style='border-radius:20px;padding:5px 12px;'>
+      {{ data.absence_rate }}% d'absence
+    </span>
+  </div>
+  <div class='card-body'>
+    <div class='row g-3 mb-4'>
+      <div class='col-4 text-center'>
+        <div class='fw-bold fs-4' style='color:#8B3042;
+             font-family:Cormorant Garamond,serif;'>{{ data.total_sessions }}</div>
+        <div class='text-muted small'>Séances</div>
+      </div>
+      <div class='col-4 text-center'>
+        <div class='fw-bold fs-4 text-danger' style='font-family:Cormorant Garamond,serif;'>
+          {{ data.critical|length }}</div>
+        <div class='text-muted small'>Critiques (≥50%)</div>
+      </div>
+      <div class='col-4 text-center'>
+        <div class='fw-bold fs-4 text-warning' style='font-family:Cormorant Garamond,serif;'>
+          {{ data.at_risk|length }}</div>
+        <div class='text-muted small'>À risque (≥30%)</div>
+      </div>
+    </div>
+    <canvas id='chart_{{ forloop.counter }}' height='60'></canvas>
+    {% if data.critical %}
+    <div class='mt-3'><div class='fw-semibold small text-danger mb-2'>
+      🔴 Étudiants critiques</div>
+      {% for s in data.critical %}
+      <span class='badge bg-danger-soft me-1 mb-1'>
+        {{ s.student.user.get_full_name }} ({{ s.pct }}%)</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if data.at_risk %}
+    <div class='mt-2'><div class='fw-semibold small text-warning mb-2'>
+      🟡 Étudiants à risque</div>
+      {% for s in data.at_risk %}
+      <span class='badge bg-warning-soft me-1 mb-1'>
+        {{ s.student.user.get_full_name }} ({{ s.pct }}%)</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+<script>
+(function(){
+  new Chart(document.getElementById('chart_{{ forloop.counter }}'), {
+    type: 'line',
+    data: {
+      labels: ['S-8','S-7','S-6','S-5','S-4','S-3','S-2','S-1'],
+      datasets: [{
+        label: 'Absences',
+        data: {{ data.weekly|safe }},
+        borderColor: '#8B3042', tension: .4, fill: true,
+        backgroundColor: 'rgba(139,48,66,.08)',
+        pointBackgroundColor: '#8B3042', pointRadius: 3
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}},
+      scales:{ y:{beginAtZero:true,ticks:{stepSize:1}}, x:{grid:{display:false}} } }
+  });
+})();
+</script>
+{% endfor %}
+{% else %}
+<div class='text-center py-5' style='color:#B07080;'>
+  <i class='bi bi-bar-chart' style='font-size:2.5rem;opacity:.5;'></i>
+  <p class='mt-3' style='font-size:.95rem;'>Aucun module actif trouvé.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Liste par groupe{% endblock %}
+{% block page_title %}Liste de présence par groupe{% endblock %}
+{% block content %}
+
+<div class='card mb-4'>
+  <div class='card-body'>
+    <form method='get' class='row g-2 align-items-end'>
+      <div class='col-md-3'>
+        <label class='form-label small fw-semibold'>Département</label>
+        <select name='dept' class='form-select form-select-sm'>
+          <option value=''>Tous</option>
+          {% for d in departments %}
+          <option {% if d == selected_dept %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class='col-md-2'>
+        <label class='form-label small fw-semibold'>Groupe</label>
+        <select name='group' class='form-select form-select-sm'>
+          <option value=''>Tous</option>
+          {% for g in groups %}
+          <option {% if g == selected_group %}selected{% endif %}>{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class='col-md-3'>
+        <label class='form-label small fw-semibold'>Date</label>
+        <input type='date' name='date' class='form-control form-control-sm'
+               value='{{ selected_date }}'>
+      </div>
+      <div class='col-md-2'>
+        <button type='submit' class='btn btn-primary btn-sm w-100'>
+          <i class='bi bi-search me-1'></i>Filtrer
+        </button>
+      </div>
+      <div class='col-md-2'>
+        <a href='?dept={{ selected_dept }}&group={{ selected_group }}&date={{ selected_date }}&export=excel'
+           class='btn btn-success btn-sm w-100'>
+          <i class='bi bi-file-earmark-excel me-1'></i>Excel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class='card'>
+  <div class='card-header'>
+    <i class='bi bi-people me-2 text-primary'></i>
+    {{ result|length }} étudiant(s) — {{ selected_date }}
+  </div>
+  <div class='table-responsive'>
+    <table class='table table-hover mb-0'>
+      <thead><tr>
+        <th>#</th><th>N° Étudiant</th><th>Nom complet</th>
+        <th>Groupe</th><th>Statut</th>
+      </tr></thead>
+      <tbody>
+        {% for item in result %}
+        <tr>
+          <td style='font-size:.8rem;color:#aaa;'>{{ forloop.counter }}</td>
+          <td class='mono small'>{{ item.student.student_id }}</td>
+          <td><strong>{{ item.student.user.get_full_name }}</strong></td>
+          <td><span class='badge bg-info-soft'>{{ item.student.group }}</span></td>
+          <td>
+            <span class='badge
+              {% if item.status_code == "present" %}bg-success-soft
+              {% elif item.status_code == "absent" %}bg-danger-soft
+              {% elif item.status_code == "justified" %}bg-primary-soft
+              {% else %}bg-secondary-soft{% endif %}'>
+              {% if item.status_code == "present" %}✅{% elif item.status_code == "absent" %}❌
+              {% elif item.status_code == "justified" %}📄{% else %}—{% endif %}
+              {{ item.status }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan='5' class='text-center py-4 text-muted'>
+          Aucun étudiant trouvé</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -147,26 +147,53 @@
 
     {% if user.is_teacher %}
     <div class="sidebar-section-title">Enseignant</div>
-    <a href="{% url 'attendance:teacher_modules' %}" class="nav-link-sidebar"><i class="bi bi-book-fill"></i> Mes modules</a>
-    <a href="{% url 'attendance:create_session' %}" class="nav-link-sidebar"><i class="bi bi-plus-circle-fill"></i> Nouvelle séance</a>
+    <a href="{% url 'attendance:teacher_modules' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'teacher_modules' %}active{% endif %}">
+        <i class="bi bi-book-fill"></i> Mes modules
+    </a>
+    <a href="{% url 'attendance:create_session' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'create_session' %}active{% endif %}">
+        <i class="bi bi-plus-circle-fill"></i> Nouvelle séance
+    </a>
+    <a href="{% url 'attendance:teacher_group_list' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'teacher_group_list' %}active{% endif %}">
+        <i class="bi bi-table"></i> Liste par séance
+    </a>
     {% endif %}
 
     {% if user.is_student %}
     <div class="sidebar-section-title">Étudiant</div>
-    <a href="{% url 'attendance:student_absences' %}" class="nav-link-sidebar"><i class="bi bi-calendar-x-fill"></i> Mes absences</a>
-    <a href="{% url 'attendance:student_history' %}" class="nav-link-sidebar"><i class="bi bi-clock-history"></i> Historique</a>
+    <a href="{% url 'attendance:student_absences' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'student_absences' %}active{% endif %}">
+        <i class="bi bi-calendar-x-fill"></i> Mes absences
+    </a>
+    <a href="{% url 'attendance:student_history' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'student_history' %}active{% endif %}">
+        <i class="bi bi-clock-history"></i> Historique
+    </a>
     {% endif %}
 
     {% if user.is_admin %}
     <div class="sidebar-section-title">Administration</div>
-    <a href="{% url 'attendance:admin_all_absences' %}" class="nav-link-sidebar"><i class="bi bi-people-fill"></i> Tous les absences</a>
-    <a href="{% url 'attendance:admin_justifications' %}" class="nav-link-sidebar"><i class="bi bi-file-earmark-check-fill"></i> Justifications</a>
-    <a href="/admin/" class="nav-link-sidebar"><i class="bi bi-gear-fill"></i> Administration</a>
+    <a href="{% url 'attendance:admin_all_absences' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'admin_all_absences' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Toutes les absences
+    </a>
+    <a href="{% url 'attendance:admin_justifications' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'admin_justifications' %}active{% endif %}">
+        <i class="bi bi-file-earmark-check-fill"></i> Justifications
+    </a>
+    <a href="{% url 'attendance:admin_group_list' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'admin_group_list' %}active{% endif %}">
+        <i class="bi bi-table"></i> Liste par groupe
+    </a>
+    <a href="{% url 'attendance:import_students' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'import_students' %}active{% endif %}">
+        <i class="bi bi-upload"></i> Importer étudiants
+    </a>
+    <a href="/admin/" class="nav-link-sidebar">
+        <i class="bi bi-gear-fill"></i> Administration
+    </a>
     {% endif %}
 
     <div class="sidebar-footer">
-        <a href="{% url 'accounts:profile' %}" class="nav-link-sidebar"><i class="bi bi-person-circle"></i> Mon profil</a>
-        <a href="{% url 'accounts:logout' %}" class="nav-link-sidebar text-danger"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+        <a href="{% url 'accounts:profile' %}" class="nav-link-sidebar {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="bi bi-person-circle"></i> Mon profil
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="nav-link-sidebar text-danger">
+            <i class="bi bi-box-arrow-right"></i> Déconnexion
+        </a>
     </div>
 </nav>
 

@@ -75,13 +75,23 @@ def register_view(request):
             department = form.cleaned_data.get('department', '')
 
             if role == 'student':
-                StudentProfile.objects.create(
+                from django.utils import timezone
+                profile = StudentProfile.objects.create(
                     user=user,
                     student_id=form.cleaned_data['student_id'],
                     department=department,
                     year_of_study=form.cleaned_data.get('year_of_study', 1),
                     group=form.cleaned_data.get('group', ''),
+                    institutional_code=form.cleaned_data.get('institutional_code', ''),
+                    emergency_contact=form.cleaned_data.get('emergency_contact', ''),
+                    terms_accepted=True,
+                    terms_accepted_at=timezone.now(),
                 )
+                # Sauvegarder la photo si fournie
+                if form.cleaned_data.get('identity_photo'):
+                    profile.identity_photo = form.cleaned_data['identity_photo']
+                    profile.save()
+
             elif role == 'teacher':
                 TeacherProfile.objects.create(
                     user=user,

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Toutes les absences{% endblock %}
+{% block page_title %}Vue globale des absences{% endblock %}
+{% block content %}
+
+<div class='d-flex justify-content-between align-items-center mb-4'>
+  <div>
+    <h5 class='fw-bold mb-1'>Absences par étudiant</h5>
+    <p class='text-muted small mb-0'>{{ student_stats|length }} étudiant(s)</p>
+  </div>
+  <div class='d-flex gap-2'>
+    <a href='?export=csv' class='btn btn-sm btn-outline-success'>
+      <i class='bi bi-download me-1'></i>Exporter CSV
+    </a>
+    <a href='?export=excel' class='btn btn-sm btn-success'>
+      <i class='bi bi-file-earmark-excel me-1'></i>Exporter Excel
+    </a>
+  </div>
+</div>
+
+<div class='card'>
+  <div class='card-header d-flex justify-content-between align-items-center'>
+    <span><i class='bi bi-people me-2 text-primary'></i>Statistiques</span>
+    <div class='d-flex gap-2'>
+      <select id='filterDept' class='form-select form-select-sm' style='width:180px;'>
+        <option value=''>Tous départements</option>
+        {% for dept in departments %}<option>{{ dept }}</option>{% endfor %}
+      </select>
+      <input type='text' id='search' class='form-control form-control-sm'
+             placeholder='Rechercher...' style='width:200px;'>
+    </div>
+  </div>
+  <div class='table-responsive'>
+    <table class='table table-hover mb-0' id='mainTable'>
+      <thead><tr>
+        <th>Étudiant</th><th>N° Étudiant</th><th>Département</th>
+        <th>Groupe</th><th>Total</th><th>Absences</th><th>Taux</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+        {% for item in student_stats %}
+        <tr>
+          <td><strong>{{ item.student.user.get_full_name }}</strong></td>
+          <td class='mono' style='font-size:.8rem;'>{{ item.student.student_id }}</td>
+          <td style='font-size:.8rem;'>{{ item.student.department }}</td>
+          <td style='font-size:.8rem;'>{{ item.student.group }}</td>
+          <td>{{ item.total }}</td>
+          <td>{{ item.absent }}</td>
+          <td>
+            <div class='d-flex align-items-center gap-2'>
+              <div class='progress flex-1' style='min-width:60px;'>
+                <div class='progress-bar
+                  {% if item.percentage >= 50 %}bg-danger
+                  {% elif item.percentage >= 30 %}bg-warning
+                  {% else %}bg-success{% endif %}'
+                  style='width:{{ item.percentage }}%'></div>
+              </div>
+              <span class='badge
+                {% if item.percentage >= 50 %}bg-danger-soft
+                {% elif item.percentage >= 30 %}bg-warning-soft
+                {% else %}bg-success-soft{% endif %}'>
+                {{ item.percentage }}%
+              </span>
+            </div>
+          </td>
+          <td>
+            <a href='{% url "attendance:admin_student_detail" item.student.id %}'
+               class='btn btn-sm btn-outline-primary'>Détails</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan='8' class='text-center py-4 text-muted'>Aucun étudiant</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+const search = document.getElementById('search');
+const filterDept = document.getElementById('filterDept');
+function filterTable() {
+  const q = search.value.toLowerCase();
+  const dept = filterDept.value.toLowerCase();
+  document.querySelectorAll('#mainTable tbody tr').forEach(r => {
+    const text = r.textContent.toLowerCase();
+    r.style.display = text.includes(q) && (!dept || text.includes(dept)) ? '' : 'none';
+  });
+}
+search.addEventListener('input', filterTable);
+filterDept.addEventListener('change', filterTable);
+</script>
+{% endblock %}

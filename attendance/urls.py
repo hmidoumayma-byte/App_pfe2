@@ -25,4 +25,11 @@ urlpatterns = [
     path('admin/justifications/<int:pk>/review/', views.review_justification, name='review_justification'),
     path('admin/absences/', views.admin_all_absences, name='admin_all_absences'),
     path('admin/students/<int:student_id>/', views.admin_student_detail, name='admin_student_detail'),
+    path('admin/import-students/', views.import_students_excel, name='import_students'),
+    path('admin/group-list/', views.admin_group_list, name='admin_group_list'),
+    path('admin/import-students/', views.import_students_excel, name='import_students'),
+    path('admin/download-template/', views.download_template, name='download_template'),
+    path('admin/group-list/', views.admin_group_list, name='admin_group_list'),
+    path('teacher/group-list/', views.teacher_group_list, name='teacher_group_list'),
+
 ]

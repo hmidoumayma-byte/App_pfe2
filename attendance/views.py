@@ -9,6 +9,10 @@ from .models import Module, Session, Attendance, Justification
 from accounts.models import StudentProfile, TeacherProfile, User
 from .forms import SessionForm, ModuleForm, JustificationForm, ManualAttendanceForm
 import json
+import csv
+import io
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 def teacher_required(func):
@@ -182,6 +186,52 @@ def module_absences(request, module_id):
         'total_sessions': total_sessions,
     })
 
+# attendance/views.py — ajouter
+
+@login_required
+@teacher_required
+def teacher_group_list(request):
+    """Enseignant : liste présence/absence par séance."""
+    teacher = request.user.teacher_profile
+    selected_session_id = request.GET.get('session_id', '')
+    export = request.GET.get('export', '')
+
+    sessions = Session.objects.filter(
+        module__teacher=teacher
+    ).select_related('module').order_by('-date', '-start_time')
+
+    result = []
+    selected_session = None
+
+    if selected_session_id:
+        selected_session = get_object_or_404(
+            Session, pk=selected_session_id, module__teacher=teacher
+        )
+        attendances = Attendance.objects.filter(
+            session=selected_session
+        ).select_related('student__user')
+        for att in attendances:
+            result.append({
+                'student': att.student,
+                'status': att.get_status_display(),
+                'status_code': att.status,
+            })
+
+    if export == 'excel' and selected_session:
+        return export_group_list_excel(
+            result,
+            selected_session.module.department,
+            selected_session.module.group,
+            str(selected_session.date)
+        )
+
+    return render(request, 'teacher/group_list.html', {
+        'sessions': sessions,
+        'result': result,
+        'selected_session': selected_session,
+        'selected_session_id': selected_session_id,
+    })
+
 
 @login_required
 @teacher_required
@@ -251,7 +301,7 @@ def mark_attendance_manual(request, session_id):
             return JsonResponse({'success': False, 'error': 'Étudiant non trouvé'})
 
     return JsonResponse({'success': False})
- 
+
 
 # ===== STUDENT VIEWS =====
 
@@ -446,6 +496,12 @@ def review_justification(request, pk):
 @admin_required
 def admin_all_absences(request):
     students = StudentProfile.objects.select_related('user').all()
+    departments = students.values_list('department', flat=True).distinct()
+
+    # Filtre par département
+    dept_filter = request.GET.get('dept', '')
+    if dept_filter:
+        students = students.filter(department=dept_filter)
 
     student_stats = []
     for student in students:
@@ -459,9 +515,260 @@ def admin_all_absences(request):
             'percentage': percentage,
         })
 
+    # Export Excel
+    if request.GET.get('export') == 'excel':
+        return export_absences_excel(student_stats)
+
+    # Export CSV
+    if request.GET.get('export') == 'csv':
+        return export_absences_csv(student_stats)
+
     return render(request, 'admin_panel/all_absences.html', {
         'student_stats': student_stats,
+        'departments': departments,
     })
+
+
+def export_absences_excel(student_stats):
+    """Exporte les stats d'absence en fichier Excel stylisé."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Absences'
+
+    # En-têtes
+    headers = ['N° Étudiant', 'Nom complet', 'Département', 'Groupe',
+               'Total séances', 'Absences', 'Taux (%)', 'Statut']
+    header_fill = PatternFill(start_color='6B1F2A', end_color='6B1F2A', fill_type='solid')
+    header_font = Font(color='FFFFFF', bold=True)
+
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center')
+
+    # Données
+    for row, item in enumerate(student_stats, 2):
+        s = item['student']
+        status = 'Critique' if item['percentage'] >= 50 else (
+                 'À risque' if item['percentage'] >= 30 else 'Normal')
+        ws.append([
+            s.student_id,
+            s.user.get_full_name(),
+            s.department,
+            s.group,
+            item['total'],
+            item['absent'],
+            item['percentage'],
+            status
+        ])
+        # Colorier les lignes selon le risque
+        if item['percentage'] >= 50:
+            fill = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
+            for col in range(1, 9):
+                ws.cell(row=row, column=col).fill = fill
+        elif item['percentage'] >= 30:
+            fill = PatternFill(start_color='FFF3CD', end_color='FFF3CD', fill_type='solid')
+            for col in range(1, 9):
+                ws.cell(row=row, column=col).fill = fill
+
+    # Largeurs automatiques
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 25
+    ws.column_dimensions['D'].width = 10
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=absences.xlsx'
+    wb.save(response)
+    return response
+
+
+def export_absences_csv(student_stats):
+    """Export CSV simple."""
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename=absences.csv'
+    response.write('\ufeff')  # BOM pour Excel
+    writer = csv.writer(response)
+    writer.writerow(['N° Étudiant', 'Nom', 'Département', 'Groupe',
+                     'Total', 'Absences', 'Taux%'])
+    for item in student_stats:
+        s = item['student']
+        writer.writerow([s.student_id, s.user.get_full_name(), s.department,
+                         s.group, item['total'], item['absent'], item['percentage']])
+    return response
+
+# attendance/views.py — ajouter cette vue
+
+@login_required
+@admin_required
+def admin_group_list(request):
+    """Liste des étudiants par groupe avec statut présence/absence."""
+    from datetime import date as dt_date
+
+    selected_dept = request.GET.get('dept', '')
+    selected_group = request.GET.get('group', '')
+    selected_date = request.GET.get('date', str(dt_date.today()))
+    export = request.GET.get('export', '')
+
+    all_students = StudentProfile.objects.select_related('user').all()
+    departments = all_students.values_list('department', flat=True).distinct()
+    groups = all_students.values_list('group', flat=True).distinct()
+
+    students = all_students
+    if selected_dept:
+        students = students.filter(department=selected_dept)
+        groups = students.values_list('group', flat=True).distinct()
+    if selected_group:
+        students = students.filter(group=selected_group)
+
+    # Construire la liste avec statut
+    result = []
+    for student in students:
+        sessions_today = Session.objects.filter(date=selected_date)
+        if sessions_today.exists():
+            attendance = Attendance.objects.filter(
+                student=student,
+                session__date=selected_date
+            ).first()
+            status = attendance.get_status_display() if attendance else 'Absent'
+            status_code = attendance.status if attendance else 'absent'
+        else:
+            status = '—'
+            status_code = 'none'
+        result.append({
+            'student': student,
+            'status': status,
+            'status_code': status_code,
+        })
+
+    # Export Excel de la liste
+    if export == 'excel':
+        return export_group_list_excel(result, selected_dept, selected_group, selected_date)
+
+    return render(request, 'admin_panel/group_list.html', {
+        'result': result,
+        'departments': departments,
+        'groups': groups,
+        'selected_dept': selected_dept,
+        'selected_group': selected_group,
+        'selected_date': selected_date,
+    })
+
+
+def export_group_list_excel(result, dept, group, date_str):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f'Groupe {group or "Tous"}'
+    ws['A1'] = f'Liste de présence — {dept} — Groupe {group} — {date_str}'
+    ws['A1'].font = Font(bold=True, size=13)
+    ws.append([])
+    headers = ['N° Étudiant', 'Nom complet', 'Groupe', 'Statut']
+    header_fill = PatternFill(start_color='1E2D45', end_color='1E2D45', fill_type='solid')
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = Font(color='FFFFFF', bold=True)
+    for item in result:
+        s = item['student']
+        ws.append([s.student_id, s.user.get_full_name(), s.group, item['status']])
+        if item['status_code'] == 'absent':
+            fill = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')
+            for col in range(1, 5):
+                ws.cell(row=ws.max_row, column=col).fill = fill
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=groupe_{group}_{date_str}.xlsx'
+    wb.save(response)
+    return response
+
+
+@login_required
+@admin_required
+def import_students_excel(request):
+    """Importer une liste d'étudiants depuis Excel."""
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            wb = openpyxl.load_workbook(excel_file)
+            ws = wb.active
+            success_count = 0
+            errors = []
+
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), 2):
+                if not row[0]:  # Ignorer lignes vides
+                    continue
+                try:
+                    # Colonnes attendues :
+                    # A: student_id, B: first_name, C: last_name,
+                    # D: email, E: department, F: year, G: group, H: username
+                    student_id, first_name, last_name = row[0], row[1], row[2]
+                    email = row[3] or ''
+                    department = row[4] or 'Non défini'
+                    year = int(row[5] or 1)
+                    group = str(row[6] or '')
+                    username = row[7] or f'stu_{student_id}'
+
+                    if User.objects.filter(username=username).exists():
+                        errors.append(f'Ligne {row_idx}: {username} existe déjà')
+                        continue
+
+                    user = User.objects.create_user(
+                        username=username,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        password=str(student_id),  # Mot de passe initial = student_id
+                        role='student'
+                    )
+                    StudentProfile.objects.create(
+                        user=user,
+                        student_id=str(student_id),
+                        department=department,
+                        year_of_study=year,
+                        group=group
+                    )
+                    success_count += 1
+                except Exception as e:
+                    errors.append(f'Ligne {row_idx}: {str(e)}')
+
+            messages.success(request, f'{success_count} étudiant(s) importé(s) avec succès.')
+            if errors:
+                for err in errors[:5]:  # Afficher max 5 erreurs
+                    messages.warning(request, err)
+        except Exception as e:
+            messages.error(request, f'Erreur de lecture du fichier: {str(e)}')
+
+        return redirect('attendance:import_students')
+
+    return render(request, 'admin_panel/import_students.html')
+
+@login_required
+@admin_required
+def download_template(request):
+    """Télécharger le modèle Excel vide."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Étudiants'
+    headers = ['N° Étudiant', 'Prénom', 'Nom', 'Email',
+               'Département', 'Année (1-5)', 'Groupe', 'Username']
+    header_fill = PatternFill(start_color='6B1F2A', end_color='6B1F2A', fill_type='solid')
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = Font(color='FFFFFF', bold=True)
+    # Exemple de ligne
+    ws.append(['ETU20240001', 'Mohamed', 'Alami', 'malami@univ.ma',
+               'Génie Informatique', 1, 'G1', 'malami'])
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=modele_etudiants.xlsx'
+    wb.save(response)
+    return response
 
 
 @login_required

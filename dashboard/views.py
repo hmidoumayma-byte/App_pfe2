@@ -29,12 +29,10 @@ def admin_dashboard(request):
     total_modules = Module.objects.filter(is_active=True).count()
     pending_justifications = Justification.objects.filter(status='pending').count()
 
-    # Absence rate stats
     total_records = Attendance.objects.count()
     absent_records = Attendance.objects.filter(status='absent').count()
     global_absence_rate = round((absent_records / total_records * 100), 1) if total_records > 0 else 0
 
-    # Students at risk (>30% absence)
     at_risk_students = []
     for student in StudentProfile.objects.select_related('user').all():
         total = Attendance.objects.filter(student=student).count()
@@ -50,10 +48,8 @@ def admin_dashboard(request):
                 })
     at_risk_students.sort(key=lambda x: x['percentage'], reverse=True)
 
-    # Recent sessions
     recent_sessions = Session.objects.select_related('module__teacher__user').order_by('-date', '-start_time')[:5]
 
-    # Monthly absence data for chart
     monthly_data = []
     months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
     for i in range(1, 13):
@@ -64,7 +60,6 @@ def admin_dashboard(request):
         ).count()
         monthly_data.append(count)
 
-    # Recent notifications
     recent_notifs = Notification.objects.filter(is_read=False).order_by('-created_at')[:5]
 
     context = {
@@ -94,18 +89,15 @@ def teacher_dashboard(request):
     modules = Module.objects.filter(teacher=teacher, is_active=True)
     total_sessions = Session.objects.filter(module__teacher=teacher).count()
 
-    # Today's sessions
     today_sessions = Session.objects.filter(
         module__teacher=teacher,
         date=date.today()
     ).select_related('module')
 
-    # Recent sessions
     recent_sessions = Session.objects.filter(
         module__teacher=teacher
     ).select_related('module').order_by('-date', '-start_time')[:5]
 
-    # Module stats
     module_stats = []
     for module in modules:
         sessions_count = Session.objects.filter(module=module).count()
@@ -118,7 +110,6 @@ def teacher_dashboard(request):
             'absence_rate': absence_rate,
         })
 
-    # Weekly attendance data for chart
     weekly_data = []
     labels = []
     for i in range(6, -1, -1):
@@ -159,14 +150,12 @@ def student_dashboard(request):
     except Exception:
         return render(request, 'dashboard/student_dashboard.html', {'error': True})
 
-    # Overall stats
     total_att = Attendance.objects.filter(student=student).count()
     present_att = Attendance.objects.filter(student=student, status='present').count()
     absent_att = Attendance.objects.filter(student=student, status='absent').count()
     justified_att = Attendance.objects.filter(student=student, status='justified').count()
     global_rate = round(((total_att - absent_att) / total_att * 100), 1) if total_att > 0 else 100
 
-    # Module stats
     modules = Module.objects.filter(
         year_of_study=student.year_of_study,
         department=student.department
@@ -187,22 +176,15 @@ def student_dashboard(request):
             'status': 'danger' if percentage >= 50 else ('warning' if percentage >= 30 else 'success'),
         })
 
-    # Recent absences
     recent_absences = Attendance.objects.filter(
         student=student,
         status__in=['absent', 'late']
     ).select_related('session__module').order_by('-session__date')[:5]
 
-    # Pending justifications
     pending_justifs = Justification.objects.filter(student=student, status='pending').count()
-
-    # AI Predictions
     predictions = generate_student_predictions(student, module_stats)
-
-    # Notifications
     notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
 
-    # Attendance chart data
     chart_labels = [m['module'].code for m in module_stats]
     chart_rates = [m['percentage'] for m in module_stats]
 
@@ -233,7 +215,6 @@ def generate_student_predictions(student, module_stats):
         module = stat['module']
         pct = stat['percentage']
 
-        # Trend analysis: last 2 weeks vs previous 2 weeks
         recent_cutoff = date.today() - timedelta(days=14)
         older_cutoff = date.today() - timedelta(days=28)
 
@@ -253,7 +234,6 @@ def generate_student_predictions(student, module_stats):
         ).count()
 
         trend = 'increasing' if recent_absent > older_absent else ('decreasing' if recent_absent < older_absent else 'stable')
-
         total_remaining_sessions = max(0, module.total_hours // 2 - stat['total'])
 
         if pct >= 50:
@@ -318,7 +298,6 @@ def ai_analysis(request):
 
             pct = round((absent / total) * 100, 1)
 
-            # Weekly breakdown
             weekly = []
             for i in range(8):
                 week_start = date.today() - timedelta(weeks=i+1)
@@ -333,7 +312,6 @@ def ai_analysis(request):
                 weekly.append(w_absent)
             weekly.reverse()
 
-            # Predict future risk
             remaining = max(0, module.total_hours // 2 - total)
             if total > 0:
                 future_absent = round(absent + (absent / total) * remaining)
@@ -357,8 +335,75 @@ def ai_analysis(request):
             'student': student,
         })
 
+    elif user.is_teacher():
+        try:
+            teacher = user.teacher_profile
+        except Exception:
+            return redirect('dashboard:home')
+
+        modules = Module.objects.filter(teacher=teacher, is_active=True)
+        analysis_data = []
+
+        for module in modules:
+            students = StudentProfile.objects.filter(
+                year_of_study=module.year_of_study,
+                department=module.department
+            )
+            total_sessions = Session.objects.filter(module=module).count()
+            if total_sessions == 0:
+                continue
+
+            at_risk = []
+            critical = []
+            module_absent = 0
+            module_present = 0
+
+            for student in students:
+                absent = Attendance.objects.filter(
+                    student=student, session__module=module, status='absent'
+                ).count()
+                present = Attendance.objects.filter(
+                    student=student, session__module=module, status='present'
+                ).count()
+                pct = round((absent / total_sessions) * 100, 1)
+                module_absent += absent
+                module_present += present
+                if pct >= 50:
+                    critical.append({'student': student, 'pct': pct})
+                elif pct >= 30:
+                    at_risk.append({'student': student, 'pct': pct})
+
+            total_records = module_absent + module_present
+            absence_rate = round((module_absent / total_records * 100), 1) if total_records > 0 else 0
+
+            # Weekly trend — utilise date importé en haut du fichier (pas de réimport local)
+            weekly = []
+            for i in range(7, -1, -1):
+                week_start = date.today() - timedelta(weeks=i+1)
+                week_end   = date.today() - timedelta(weeks=i)
+                w_absent = Attendance.objects.filter(
+                    session__module=module,
+                    session__date__gte=week_start,
+                    session__date__lt=week_end,
+                    status='absent'
+                ).count()
+                weekly.append(w_absent)
+
+            analysis_data.append({
+                'module': module,
+                'total_sessions': total_sessions,
+                'absence_rate': absence_rate,
+                'at_risk': at_risk,
+                'critical': critical,
+                'weekly': json.dumps(weekly),
+            })
+
+        return render(request, 'dashboard/ai_analysis_teacher.html', {
+            'analysis_data': analysis_data,
+            'teacher': teacher,
+        })
+
     elif user.is_admin():
-        # Admin: Global statistics & risk analysis
         all_students = StudentProfile.objects.select_related('user').all()
         risk_data = {'high': 0, 'medium': 0, 'low': 0}
 

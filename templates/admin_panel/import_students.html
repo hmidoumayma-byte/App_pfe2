@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Import Étudiants{% endblock %}
+{% block page_title %}Importer des étudiants{% endblock %}
+{% block content %}
+
+<div class='row g-4'>
+  <div class='col-md-6'>
+    <div class='card'>
+      <div class='card-header'>
+        <i class='bi bi-file-earmark-excel me-2 text-success'></i>
+        Importer depuis Excel
+      </div>
+      <div class='card-body'>
+        <p class='text-muted small mb-3'>
+          Le fichier Excel doit avoir les colonnes dans cet ordre :
+        </p>
+        <table class='table table-sm table-bordered small mb-3'>
+          <thead class='table-light'>
+            <tr><th>A</th><th>B</th><th>C</th><th>D</th>
+                <th>E</th><th>F</th><th>G</th><th>H</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>N° Étudiant</td><td>Prénom</td><td>Nom</td>
+                <td>Email</td><td>Département</td><td>Année</td>
+                <td>Groupe</td><td>Username</td></tr>
+          </tbody>
+        </table>
+        <form method='post' enctype='multipart/form-data'>
+          {% csrf_token %}
+          <div class='mb-3'>
+            <label class='form-label fw-semibold'>Fichier Excel (.xlsx)</label>
+            <input type='file' name='excel_file' class='form-control'
+                   accept='.xlsx,.xls' required>
+          </div>
+          <button type='submit' class='btn btn-primary'>
+            <i class='bi bi-upload me-2'></i>Importer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class='col-md-6'>
+    <div class='card'>
+      <div class='card-header'>
+        <i class='bi bi-download me-2 text-primary'></i>
+        Télécharger le modèle Excel
+      </div>
+      <div class='card-body'>
+        <p class='text-muted small'>Téléchargez ce modèle et remplissez-le.</p>
+        <a href='{% url "attendance:download_template" %}'
+           class='btn btn-outline-primary'>
+          <i class='bi bi-file-earmark-excel me-2'></i>Modèle Excel
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

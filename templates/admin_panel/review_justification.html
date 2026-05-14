@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Révision justification{% endblock %}
+{% block page_title %}Révision de justification{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb" style="font-size:.82rem;">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'attendance:admin_justifications' %}" class="text-decoration-none">Justifications</a></li>
+        <li class="breadcrumb-item active">Révision</li>
+      </ol>
+    </nav>
+
+    <!-- Info étudiant & absence -->
+    <div class="card mb-4 fade-in">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-person-fill text-primary"></i>
+        Informations sur l'absence
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Étudiant</div>
+            <div class="fw-700">{{ justification.student.user.get_full_name }}</div>
+            <div class="small text-muted">{{ justification.student.student_id }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Module</div>
+            <div class="fw-700">{{ justification.attendance.session.module.name }}</div>
+            <div class="small text-muted mono">{{ justification.attendance.session.module.code }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Date de séance</div>
+            <div class="fw-600">{{ justification.attendance.session.date }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Type de séance</div>
+            <div class="fw-600">{{ justification.attendance.session.get_session_type_display }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Soumise le</div>
+            <div class="fw-600">{{ justification.submitted_at|date:"d/m/Y H:i" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="small text-muted mb-1">Statut actuel</div>
+            {% if justification.status == 'pending' %}
+              <span class="badge bg-warning text-dark">En attente</span>
+            {% elif justification.status == 'approved' %}
+              <span class="badge bg-success">Approuvée</span>
+            {% else %}
+              <span class="badge bg-danger">Rejetée</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Justification de l'étudiant -->
+    <div class="card mb-4 fade-in fade-in-delay-1">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-chat-left-text-fill text-primary"></i>
+        Motif soumis par l'étudiant
+      </div>
+      <div class="card-body">
+        <p class="mb-0" style="line-height:1.7;">{{ justification.reason|default:"Aucun motif fourni." }}</p>
+
+        {% if justification.document %}
+        <div class="mt-3 pt-3 border-top">
+          <div class="small text-muted mb-2">Document joint</div>
+          <a href="{{ justification.document.url }}" target="_blank"
+             class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Télécharger le document
+          </a>
+        </div>
+        {% else %}
+        <div class="mt-3 pt-3 border-top">
+          <span class="small text-muted"><i class="bi bi-paperclip me-1"></i>Aucun document joint</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Décision admin -->
+    {% if justification.status == 'pending' %}
+    <div class="card fade-in fade-in-delay-2">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-check2-square text-primary"></i>
+        Décision
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-600" for="admin_comment">Commentaire (optionnel)</label>
+          <textarea id="admin_comment" name="admin_comment" rows="3"
+                    class="form-control"
+                    placeholder="Laissez un commentaire pour l'étudiant…"
+                    style="border-radius:8px;font-size:.875rem;"></textarea>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <!-- Approuver -->
+          <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <textarea name="admin_comment" id="comment_approve" style="display:none;"></textarea>
+            <button type="submit"
+                    class="btn btn-success fw-600"
+                    onclick="document.getElementById('comment_approve').value = document.getElementById('admin_comment').value"
+                    style="border-radius:8px;">
+              <i class="bi bi-check-circle me-1"></i> Approuver
+            </button>
+          </form>
+
+          <!-- Rejeter -->
+          <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <textarea name="admin_comment" id="comment_reject" style="display:none;"></textarea>
+            <button type="submit"
+                    class="btn btn-danger fw-600"
+                    onclick="document.getElementById('comment_reject').value = document.getElementById('admin_comment').value"
+                    style="border-radius:8px;">
+              <i class="bi bi-x-circle me-1"></i> Rejeter
+            </button>
+          </form>
+
+          <a href="{% url 'attendance:admin_justifications' %}" class="btn btn-outline-secondary fw-600" style="border-radius:8px;">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Déjà traitée -->
+    <div class="card fade-in fade-in-delay-2">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle text-primary"></i>
+        Décision enregistrée
+      </div>
+      <div class="card-body">
+        {% if justification.admin_comment %}
+        <div class="mb-3">
+          <div class="small text-muted mb-1">Commentaire admin</div>
+          <p class="mb-0">{{ justification.admin_comment }}</p>
+        </div>
+        {% endif %}
+        {% if justification.reviewed_at %}
+        <div class="small text-muted">
+          Traitée le {{ justification.reviewed_at|date:"d/m/Y H:i" }}
+          {% if justification.reviewed_by %}par {{ justification.reviewed_by.get_full_name }}{% endif %}
+        </div>
+        {% endif %}
+        <div class="mt-3">
+          <a href="{% url 'attendance:admin_justifications' %}" class="btn btn-outline-secondary fw-600" style="border-radius:8px;">
+            <i class="bi bi-arrow-left me-1"></i> Retour aux justifications
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
