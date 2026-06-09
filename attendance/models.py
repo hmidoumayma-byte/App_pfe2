@@ -87,12 +87,15 @@ class Session(models.Model):
     def __str__(self):
         return f"{self.module.code} - {self.date} {self.start_time}"
 
-    def generate_qr_code(self, expiry_minutes=30):
-        from django.conf import settings
+    def generate_qr_code(self, expiry_minutes=30, base_url=None):
         self.qr_expires_at = timezone.now() + timezone.timedelta(minutes=expiry_minutes)
         self.is_qr_active = True
 
-        qr_data = f"http://192.168.1.111:8000/attendance/scan/{self.qr_token}/"
+        # ✅ URL dynamique — reçue depuis la vue, plus jamais codée en dur
+        if base_url:
+            qr_data = f"{base_url}/attendance/scan/{self.qr_token}/"
+        else:
+            qr_data = f"http://127.0.0.1:8000/attendance/scan/{self.qr_token}/"
 
         qr = qrcode.QRCode(
             version=1,

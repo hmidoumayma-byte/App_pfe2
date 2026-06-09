@@ -215,11 +215,13 @@ def generate_qr(request, session_id):
     session = get_object_or_404(Session, pk=session_id, module__teacher=request.user.teacher_profile)
 
     expiry = int(request.POST.get('expiry_minutes', 30))
-    session.generate_qr_code(expiry_minutes=expiry)
+    
+    # ✅ Construire l'URL de base depuis la requête — fonctionne sur PC et téléphone
+    base_url = request.scheme + '://' + request.get_host()
+    session.generate_qr_code(expiry_minutes=expiry, base_url=base_url)
 
-    messages.success(request, f'QR Code généré! Valide pendant {expiry} minutes.')
+    messages.success(request, f'QR Code généré ! Valide pendant {expiry} minutes.')
     return redirect('attendance:session_detail', pk=session_id)
-
 
 @login_required
 @teacher_required
