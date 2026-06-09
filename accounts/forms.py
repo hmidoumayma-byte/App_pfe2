@@ -1,24 +1,21 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm
+from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from .models import User, StudentProfile, TeacherProfile
 
 
 class LoginForm(forms.Form):
     username = forms.CharField(
-        label='Nom d\'utilisateur',
+        label="Nom d'utilisateur",
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Nom d\'utilisateur ou email',
+            'placeholder': "Nom d'utilisateur ou email",
             'autofocus': True
         })
     )
     password = forms.CharField(
         label='Mot de passe',
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Mot de passe'
-        })
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe'})
     )
     role = forms.ChoiceField(
         choices=User.ROLE_CHOICES,
@@ -52,76 +49,73 @@ class RegisterForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     phone = forms.CharField(
-        label='Téléphone',
-        required=False,
+        label='Téléphone', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Téléphone'})
     )
-
     institutional_code = forms.CharField(
-        label='Code institutionnel',
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Ex: USMC-GI-2024-001'
-        })
+        label='Code institutionnel', required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: USMC-GI-2024-001'})
     )
     identity_photo = forms.ImageField(
-        label='Photo d\'identité',
-        required=False,
+        label="Photo d'identité", required=False,
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
     )
     emergency_contact = forms.CharField(
-        label='Contact d\'urgence',
-        required=False,
+        label="Contact d'urgence", required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom et téléphone'})
     )
+
+    # ✅ CORRIGÉ : required=False — la validation conditionnelle est dans clean()
     terms_accepted = forms.BooleanField(
-        label='J\'accepte les conditions d\'utilisation',
-        required=True,
+        label="J'accepte les conditions d'utilisation",
+        required=False,
         error_messages={'required': 'Vous devez accepter les conditions pour vous inscrire.'}
     )
 
-    # Student fields
+    # ── Champs étudiant ──
     student_id = forms.CharField(
-        label='Numéro Étudiant',
-        required=False,
+        label='Numéro Étudiant', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: ETU20240001'})
     )
     year_of_study = forms.ChoiceField(
         choices=[(i, f'{i}ème Année') for i in range(1, 6)],
         required=False,
-        label='Année d\'étude',
+        label="Année d'étude",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     group = forms.CharField(
-        label='Groupe',
-        required=False,
+        label='Groupe', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: G1'})
     )
-
-    # Teacher fields
-    teacher_id = forms.CharField(
-        label='Numéro Enseignant',
+    # ✅ NOUVEAU — sélection du groupe académique (FK vers academic.Groupe)
+    groupe_academique = forms.IntegerField(
         required=False,
+        widget=forms.HiddenInput()   # rempli par JS depuis les selects cascade
+    )
+
+    # ── Champs enseignant ──
+    teacher_id = forms.CharField(
+        label='Numéro Enseignant', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: ENS2024001'})
     )
     specialization = forms.CharField(
-        label='Spécialisation',
-        required=False,
+        label='Spécialisation', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Génie Logiciel'})
     )
-
     department = forms.CharField(
-        label='Département',
-        required=False,
+        label='Département', required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Génie Informatique'})
     )
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'role', 'phone', 'institutional_code', 'identity_photo', 'emergency_contact', 'terms_accepted', 'password1', 'password2']
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'role',
+            'phone', 'institutional_code', 'identity_photo', 'emergency_contact',
+            'terms_accepted', 'password1', 'password2'
+        ]
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom d\'utilisateur'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Nom d'utilisateur"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -142,20 +136,24 @@ class RegisterForm(UserCreationForm):
         role = cleaned_data.get('role')
 
         if role == 'student':
+            # Validation conditions
+            if not cleaned_data.get('terms_accepted'):
+                self.add_error('terms_accepted', 'Vous devez accepter les conditions pour vous inscrire.')
+            # Validation numéro étudiant
             if not cleaned_data.get('student_id'):
                 self.add_error('student_id', 'Le numéro étudiant est requis.')
             else:
-                from accounts.models import StudentProfile
                 if StudentProfile.objects.filter(student_id=cleaned_data.get('student_id')).exists():
-                    self.add_error('student_id', ' Ce numéro étudiant existe déjà.')
+                    self.add_error('student_id', 'Ce numéro étudiant existe déjà.')
+            # Validation département
             if not cleaned_data.get('department'):
                 self.add_error('department', 'Le département est requis.')
 
         elif role == 'teacher':
+            # Validation numéro enseignant
             if not cleaned_data.get('teacher_id'):
                 self.add_error('teacher_id', 'Le numéro enseignant est requis.')
             else:
-                from accounts.models import TeacherProfile
                 if TeacherProfile.objects.filter(teacher_id=cleaned_data.get('teacher_id')).exists():
                     self.add_error('teacher_id', 'Ce numéro enseignant existe déjà.')
             if not cleaned_data.get('department'):
@@ -167,10 +165,7 @@ class RegisterForm(UserCreationForm):
 class ForgotPasswordForm(forms.Form):
     email = forms.EmailField(
         label='Email',
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Votre adresse email'
-        })
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Votre adresse email'})
     )
 
     def clean_email(self):

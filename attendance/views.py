@@ -111,7 +111,83 @@ def create_session(request, module_id=None):
 
     return render(request, 'teacher/create_session.html', {'form': form, 'module': module})
 
+@login_required
+@login_required
+def mes_modules(request):
+    """Enseignant : voir ses modules synchronisés depuis l'emploi du temps."""
+    if not request.user.is_teacher():
+        return redirect('dashboard:home')
+ 
+    try:
+        teacher = request.user.teacher_profile
+    except Exception:
+        return redirect('dashboard:home')
+ 
+    modules = Module.objects.filter(
+        teacher=teacher, is_active=True
+    ).prefetch_related(
+        'groupes__niveau__filiere',
+        'sessions'
+    ).select_related('emploi_du_temps__salle')
+ 
+    return render(request, 'teacher/mes_modules.html', {
+        'modules': modules,
+        'teacher': teacher,
+    })
+ 
 
+@login_required
+def creer_seance(request, module_id):
+    """Enseignant : créer une séance pour un module (avec pré-remplissage depuis l'EDT)."""
+    if not request.user.is_teacher():
+        return redirect('dashboard:home')
+ 
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user.teacher_profile)
+ 
+    if request.method == 'POST':
+        from academic.models import Salle as SalleModel
+        salle_id = request.POST.get('salle') or None
+ 
+        session = Session.objects.create(
+            module=module,
+            date=request.POST.get('date'),
+            start_time=request.POST.get('start_time'),
+            end_time=request.POST.get('end_time'),
+            session_type=request.POST.get('session_type', 'cours'),
+            room=request.POST.get('room', ''),
+            salle_id=salle_id,
+            notes=request.POST.get('notes', ''),
+        )
+ 
+        # Auto-créer les enregistrements de présence pour tous les étudiants des groupes liés
+        nb_created = 0
+        for groupe in module.groupes.all():
+            from accounts.models import StudentProfile as SP
+            etudiants = SP.objects.filter(groupe_academique=groupe)
+            for etudiant in etudiants:
+                _, created = Attendance.objects.get_or_create(
+                    student=etudiant,
+                    session=session,
+                    defaults={'status': 'absent'}
+                )
+                if created:
+                    nb_created += 1
+ 
+        messages.success(
+            request,
+            f'Séance du {session.date} créée avec succès — '
+            f'{nb_created} enregistrement(s) de présence initialisés.'
+        )
+        return redirect('attendance:session_detail', pk=session.pk)
+ 
+    from academic.models import Salle as SalleModel
+    salles = SalleModel.objects.filter(is_active=True)
+ 
+    return render(request, 'teacher/creer_seance.html', {
+        'module': module,
+        'salles': salles,
+        'types': Session.SESSION_TYPES,
+    })
 @login_required
 @teacher_required
 def session_detail(request, pk):
@@ -190,7 +266,7 @@ def module_absences(request, module_id):
         'total_sessions': total_sessions,
     })
 
-# attendance/views.py — ajouter
+
 
 @login_required
 @teacher_required
@@ -306,7 +382,7 @@ def mark_attendance_manual(request, session_id):
 
     return JsonResponse({'success': False})
 
-# attendance/views.py — AJOUTER cette fonction
+
 
 @login_required
 @teacher_required
@@ -511,7 +587,7 @@ def student_history(request):
         'attendances': all_attendances,
     })
 
-# attendance/views.py — AJOUTER
+
 
 @login_required
 @student_required
@@ -538,7 +614,53 @@ def student_planning(request):
     return render(request, 'student/planning.html', {
         'events_json': json.dumps(events), 'upcoming_sessions': upcoming})
 
-
+@login_required
+def mon_planning(request):
+    """Planning étudiant synchronisé avec l'emploi du temps créé par l'admin."""
+    if not request.user.is_student():
+        return redirect('dashboard:home')
+ 
+    try:
+        profile = request.user.student_profile
+    except Exception:
+        messages.error(request, "Profil étudiant introuvable.")
+        return redirect('dashboard:home')
+ 
+    groupe = profile.groupe_academique
+    planning = {}
+    modules_etudiant = []
+    jours = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam']
+ 
+    if groupe:
+        from academic.models import EmploiDuTemps
+ 
+        entries = EmploiDuTemps.objects.filter(
+            groupe=groupe, is_active=True
+        ).select_related('teacher__user', 'salle').order_by('heure_debut')
+ 
+        planning = {j: list(entries.filter(jour=j)) for j in jours}
+ 
+        # Récupérer les modules liés à ce groupe pour la section "mes modules"
+        modules_etudiant = Module.objects.filter(
+            groupes=groupe, is_active=True
+        ).select_related('teacher__user').prefetch_related('sessions')
+ 
+    # Horaires à afficher dans le tableau (lignes)
+    horaires = ['07:30', '08:00', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '13:00', '13:30', '14:00',
+                '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30']
+ 
+    context = {
+        'planning': planning,
+        'jours': jours,
+        'jours_labels': ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+        'groupe': groupe,
+        'modules': modules_etudiant,
+        'profile': profile,
+        'horaires': horaires,
+    }
+    return render(request, 'student/mon_planning.html', context)
+ 
 @login_required
 @student_required
 def student_statistics(request):
@@ -957,47 +1079,70 @@ def admin_users(request):
 @login_required
 @admin_required
 def admin_user_edit(request, user_id):
+    from academic.models import Groupe
     target = get_object_or_404(User, pk=user_id)
+
     if request.method == 'POST':
         target.first_name = request.POST.get('first_name', target.first_name)
         target.last_name  = request.POST.get('last_name',  target.last_name)
         target.email      = request.POST.get('email',      target.email)
         target.is_active  = 'is_active' in request.POST
         target.save()
+
         if target.is_student():
-            p = target.student_profile
-            p.department = request.POST.get('department', p.department)
-            p.year_of_study = request.POST.get('year_of_study', p.year_of_study)
-            p.group = request.POST.get('group', p.group)
-            
-            # NOUVEAU — synchroniser avec le groupe académique
+            # ✅ get_or_create — crée le profil s'il n'existe pas encore
+            p, created = StudentProfile.objects.get_or_create(
+                user=target,
+                defaults={
+                    'student_id': request.POST.get('student_id', f'STU{target.pk}'),
+                    'department': request.POST.get('department', ''),
+                    'year_of_study': request.POST.get('year_of_study', 1),
+                    'group': request.POST.get('group', ''),
+                }
+            )
+            if not created:
+                p.department    = request.POST.get('department', p.department)
+                p.year_of_study = request.POST.get('year_of_study', p.year_of_study)
+                p.group         = request.POST.get('group', p.group)
+
+            # Synchronisation groupe académique
             groupe_id = request.POST.get('groupe_academique')
             if groupe_id:
-                from academic.models import Groupe
                 try:
-                    groupe_obj = Groupe.objects.get(pk=groupe_id)
+                    groupe_obj = Groupe.objects.select_related('niveau__filiere').get(pk=groupe_id)
                     p.groupe_academique = groupe_obj
-                    # Mettre à jour les anciens champs texte automatiquement
-                    p.department = groupe_obj.niveau.filiere.name
+                    p.department    = groupe_obj.niveau.filiere.name
                     p.year_of_study = groupe_obj.niveau.year_number
-                    p.group = groupe_obj.name
+                    p.group         = groupe_obj.name
                 except Groupe.DoesNotExist:
                     pass
             p.save()
+
         elif target.is_teacher():
-            p = target.teacher_profile
+            from accounts.models import TeacherProfile as TP
+            p, _ = TP.objects.get_or_create(
+                user=target,
+                defaults={'teacher_id': f'ENS{target.pk}', 'department': ''}
+            )
             p.department     = request.POST.get('department', p.department)
             p.specialization = request.POST.get('specialization', p.specialization)
             p.save()
+
         from core_settings.models import ActionLog
-        ActionLog.objects.create(user=request.user, action='update_user',
+        ActionLog.objects.create(
+            user=request.user, action='update_user',
             description=f'Modification: {target.get_full_name()}',
-            ip_address=request.META.get('REMOTE_ADDR'))
-        messages.success(request, 'Utilisateur mis a jour.')
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        messages.success(request, 'Utilisateur mis à jour.')
         return redirect('attendance:admin_users')
-    return render(request, 'admin_panel/user_edit.html', {'target_user': target,
-    'groupes_academiques': GroupeAcademique.objects.select_related('niveau__filiere').filter(is_active=True)
-})
+
+    # GET — afficher le formulaire
+    groupes = Groupe.objects.select_related('niveau__filiere').filter(is_active=True)
+    return render(request, 'admin_panel/user_edit.html', {
+        'target_user': target,
+        'groupes_academiques': groupes,
+    })
 
 @login_required
 @admin_required

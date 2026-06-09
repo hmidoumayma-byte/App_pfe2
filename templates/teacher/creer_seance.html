@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Créer une séance{% endblock %}
+{% block page_title %}Nouvelle séance — {{ module.code }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{% url 'attendance:mes_modules' %}" class="text-muted text-decoration-none small">
+    <i class="bi bi-arrow-left me-1"></i>Retour à mes modules
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Formulaire -->
+  <div class="col-md-7">
+    <div class="card border-0" style="border-radius:14px;box-shadow:var(--shadow);">
+      <div class="card-header border-0" style="background:var(--primary-light);border-radius:14px 14px 0 0;padding:20px 24px;">
+        <h6 class="fw-bold mb-0" style="color:var(--burgundy)">
+          <i class="bi bi-plus-circle-fill me-2"></i>Créer une séance
+        </h6>
+        <small class="text-muted">Module : <strong>{{ module.code }} — {{ module.name }}</strong></small>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+              Date <span style="color:var(--burgundy)">*</span>
+            </label>
+            <input type="date" name="date" class="form-control" style="border-radius:10px;" required>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+                Heure début <span style="color:var(--burgundy)">*</span>
+              </label>
+              {% if module.emploi_du_temps %}
+              <input type="time" name="start_time" class="form-control" style="border-radius:10px;"
+                     value="{{ module.emploi_du_temps.heure_debut|time:'H:i' }}" required>
+              {% else %}
+              <input type="time" name="start_time" class="form-control" style="border-radius:10px;" required>
+              {% endif %}
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+                Heure fin <span style="color:var(--burgundy)">*</span>
+              </label>
+              {% if module.emploi_du_temps %}
+              <input type="time" name="end_time" class="form-control" style="border-radius:10px;"
+                     value="{{ module.emploi_du_temps.heure_fin|time:'H:i' }}" required>
+              {% else %}
+              <input type="time" name="end_time" class="form-control" style="border-radius:10px;" required>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+              Type de séance
+            </label>
+            <select name="session_type" class="form-select" style="border-radius:10px;">
+              {% for code, label in types %}
+              <option value="{{ code }}"
+                {% if module.emploi_du_temps and module.emploi_du_temps.session_type == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+              Salle
+            </label>
+            <select name="salle" class="form-select" style="border-radius:10px;">
+              <option value="">— Aucune salle —</option>
+              {% for salle in salles %}
+              <option value="{{ salle.pk }}"
+                {% if module.emploi_du_temps and module.emploi_du_temps.salle_id == salle.pk %}selected{% endif %}>
+                {{ salle.name }} ({{ salle.capacity }} places — {{ salle.get_room_type_display }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+              Salle (texte libre)
+            </label>
+            <input type="text" name="room" class="form-control" style="border-radius:10px;"
+                   placeholder="Ex: Amphi A, Salle 12..."
+                   {% if module.emploi_du_temps and module.emploi_du_temps.salle %}
+                   value="{{ module.emploi_du_temps.salle.name }}"
+                   {% endif %}>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold" style="font-size:.8rem;color:#475569;text-transform:uppercase;letter-spacing:.5px;">
+              Notes
+            </label>
+            <textarea name="notes" class="form-control" style="border-radius:10px;" rows="2"
+                      placeholder="Rappels, consignes..."></textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn flex-fill"
+                    style="background:var(--wine);color:#fff;border-radius:10px;padding:12px;font-weight:600;">
+              <i class="bi bi-check-lg me-2"></i>Créer la séance
+            </button>
+            <a href="{% url 'attendance:mes_modules' %}"
+               class="btn btn-outline-secondary flex-fill"
+               style="border-radius:10px;padding:12px;">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Récapitulatif module -->
+  <div class="col-md-5">
+    <div class="card border-0" style="border-radius:14px;box-shadow:var(--shadow);background:var(--primary-light);">
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-3" style="color:var(--burgundy)">
+          <i class="bi bi-info-circle-fill me-2"></i>Résumé du module
+        </h6>
+        <dl class="mb-0" style="font-size:.875rem;">
+          <dt class="text-muted small">Code</dt>
+          <dd class="fw-semibold mb-2">{{ module.code }}</dd>
+          <dt class="text-muted small">Nom</dt>
+          <dd class="fw-semibold mb-2">{{ module.name }}</dd>
+          <dt class="text-muted small">Filière / Département</dt>
+          <dd class="fw-semibold mb-2">{{ module.department }}</dd>
+          <dt class="text-muted small">Groupes</dt>
+          <dd class="mb-2">
+            {% for g in module.groupes.all %}
+              <span class="badge" style="background:#fff;color:var(--navy);border:1px solid var(--border);">
+                {{ g }}
+              </span>
+            {% empty %}—{% endfor %}
+          </dd>
+          <dt class="text-muted small">Séances créées</dt>
+          <dd class="fw-bold" style="color:var(--burgundy);">{{ module.sessions.count }}</dd>
+        </dl>
+
+        {% if module.groupes.all %}
+        <hr style="border-color:var(--border);">
+        <small class="text-muted">
+          <i class="bi bi-people-fill me-1"></i>
+          <strong>
+            {% with module.groupes.first as g %}
+            Étudiants du groupe {{ g.name }} :
+            {% endwith %}
+          </strong>
+          <br>
+          La présence sera automatiquement créée pour tous les étudiants
+          affectés aux groupes du module lors de la création.
+        </small>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

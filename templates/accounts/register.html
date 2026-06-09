@@ -12,17 +12,14 @@
             --burgundy: #6B1F2A;
             --wine: #8B3042;
             --dusty-rose: #B07080;
-            --blush: #D4A0A8;
             --navy: #1E2D45;
         }
-
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8FAFC; min-height: 100vh; }
         .register-wrapper { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 16px; }
-        .register-card { background:#fff; border-radius:20px; box-shadow:0 4px 40px rgba(0,0,0,.08); width:100%; max-width:720px; padding:40px 48px; }
+        .register-card { background:#fff; border-radius:20px; box-shadow:0 4px 40px rgba(0,0,0,.08); width:100%; max-width:760px; padding:40px 48px; }
         .form-label { font-size:.8rem; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
         .form-control, .form-select { border:1.5px solid #E2E8F0; border-radius:10px; padding:10px 14px; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; }
         .form-control:focus, .form-select:focus { border-color:var(--burgundy); box-shadow:0 0 0 3px rgba(107,31,42,.12); }
-        
         .role-selector { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
         .role-option { border:2px solid #E2E8F0; border-radius:12px; padding:16px; cursor:pointer; transition:all .2s; text-align:center; }
         .role-option:hover, .role-option.selected { border-color:var(--burgundy); background:#FDF2F4; }
@@ -30,36 +27,17 @@
         .role-option .name { font-weight:700; font-size:.9rem; color:#0F172A; }
         .role-option .desc { font-size:.75rem; color:#64748B; }
         .role-option.selected .name { color:var(--burgundy); }
-        
         .section-heading { font-weight:700; font-size:.95rem; color:#0F172A; margin:24px 0 16px; padding-bottom:8px; border-bottom:2px solid #FDF2F4; display:flex; align-items:center; gap:8px; }
         .step-badge { background:var(--burgundy); color:#fff; border-radius:50%; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:.7rem; flex-shrink:0; }
-        
-        .btn-register { background:linear-gradient(135deg,var(--burgundy),var(--wine)); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:.95rem; font-family:'Plus Jakarta Sans',sans-serif; width:100%; cursor:pointer; transition:all .25s; }
+        .btn-register { background:linear-gradient(135deg,var(--burgundy),var(--wine)); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:.95rem; width:100%; cursor:pointer; transition:all .25s; }
         .btn-register:hover { background:linear-gradient(135deg,#4D1520,var(--burgundy)); transform:translateY(-1px); box-shadow:0 6px 20px rgba(107,31,42,.35); }
-        
         .is-invalid { border-color:#EF4444 !important; }
         .invalid-feedback { font-size:.8rem; color:#EF4444; }
         .terms-box { background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:10px; padding:14px; max-height:120px; overflow-y:auto; font-size:.8rem; color:#64748B; margin-bottom:12px; line-height:1.7; }
-        
-        /* Nouvelles couleurs ajoutées */
-        .alert-danger {
-            background-color: #FEE2E2;
-            border-color: #FECACA;
-            color: #991B1B;
-        }
-        .text-danger { color: var(--burgundy) !important; }
-        a { color: var(--burgundy); }
-        a:hover { color: var(--wine); }
-        
-        /* Focus states */
-        .form-check-input:checked {
-            background-color: var(--burgundy);
-            border-color: var(--burgundy);
-        }
-        .form-check-input:focus {
-            border-color: var(--burgundy);
-            box-shadow: 0 0 0 3px rgba(107,31,42,.12);
-        }
+        .form-check-input:checked { background-color:var(--burgundy); border-color:var(--burgundy); }
+        .cascade-step { position:relative; }
+        .cascade-step.locked select { opacity:.5; pointer-events:none; }
+        .groupe-badge { display:inline-block; background:#FDF2F4; border:1.5px solid var(--dusty-rose); color:var(--burgundy); border-radius:8px; padding:6px 14px; font-size:.85rem; font-weight:600; margin-top:6px; }
     </style>
 </head>
 <body>
@@ -125,7 +103,8 @@
         </div>
         <div class="col-6">
           <label class="form-label">Département *</label>
-          <input type="text" name="department" class="form-control" value="{{ form.department.value|default:'' }}" placeholder="Ex: Génie Informatique">
+          <input type="text" name="department" id="departmentInput" class="form-control {% if form.department.errors %}is-invalid{% endif %}" value="{{ form.department.value|default:'' }}" placeholder="Sera rempli automatiquement">
+          {% if form.department.errors %}<div class="invalid-feedback">{{ form.department.errors.0 }}</div>{% endif %}
         </div>
       </div>
 
@@ -135,7 +114,8 @@
         <div class="row g-3">
           <div class="col-6">
             <label class="form-label">N° Enseignant *</label>
-            <input type="text" name="teacher_id" class="form-control" value="{{ form.teacher_id.value|default:'' }}" placeholder="ENS20240001">
+            <input type="text" name="teacher_id" class="form-control {% if form.teacher_id.errors %}is-invalid{% endif %}" value="{{ form.teacher_id.value|default:'' }}" placeholder="ENS20240001">
+            {% if form.teacher_id.errors %}<div class="invalid-feedback">{{ form.teacher_id.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-6">
             <label class="form-label">Spécialisation</label>
@@ -146,7 +126,46 @@
 
       <!-- ===== ÉTUDIANT ===== -->
       <div id="student-fields" style="display:none;">
-        <div class="section-heading"><span class="step-badge">2</span> Informations académiques</div>
+        <div class="section-heading"><span class="step-badge">2</span> Affectation académique</div>
+
+        <!-- ✅ SELECTS CASCADE : Filière → Niveau → Groupe -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4 cascade-step" id="step-filiere">
+            <label class="form-label">Filière *</label>
+            <select id="select_filiere" class="form-select">
+              <option value="">— Choisir une filière —</option>
+              {% for f in filieres %}
+              <option value="{{ f.pk }}">{{ f.code }} — {{ f.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4 cascade-step locked" id="step-niveau">
+            <label class="form-label">Niveau *</label>
+            <select id="select_niveau" class="form-select">
+              <option value="">— D'abord choisir filière —</option>
+            </select>
+          </div>
+          <div class="col-md-4 cascade-step locked" id="step-groupe">
+            <label class="form-label">Groupe *</label>
+            <select id="select_groupe" class="form-select">
+              <option value="">— D'abord choisir niveau —</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Résumé de l'affectation -->
+        <div id="affectation-summary" style="display:none;" class="mb-3">
+          <div class="groupe-badge">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            Affectation : <span id="summary-text"></span>
+          </div>
+        </div>
+
+        <!-- Champs cachés remplis par JS -->
+        <input type="hidden" name="groupe_academique" id="groupeAcademiqueInput">
+        <input type="hidden" name="year_of_study" id="yearInput" value="1">
+        <input type="hidden" name="group" id="groupInput">
+
         <div class="row g-3">
           <div class="col-4">
             <label class="form-label">N° Étudiant *</label>
@@ -154,20 +173,10 @@
             {% if form.student_id.errors %}<div class="invalid-feedback">{{ form.student_id.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-4">
-            <label class="form-label">Année</label>
-            <select name="year_of_study" class="form-select">
-              {% for i in "12345" %}<option value="{{ i }}">{{ i }}ème Année</option>{% endfor %}
-            </select>
+            <label class="form-label">Code institutionnel</label>
+            <input type="text" name="institutional_code" class="form-control" value="{{ form.institutional_code.value|default:'' }}" placeholder="USMC-GI-2024-001">
           </div>
           <div class="col-4">
-            <label class="form-label">Groupe</label>
-            <input type="text" name="group" class="form-control" value="{{ form.group.value|default:'' }}" placeholder="G1">
-          </div>
-          <div class="col-6">
-            <label class="form-label">Code institutionnel</label>
-            <input type="text" name="institutional_code" class="form-control" value="{{ form.institutional_code.value|default:'' }}" placeholder="Ex: USMC-GI-2024-001">
-          </div>
-          <div class="col-6">
             <label class="form-label">Contact d'urgence</label>
             <input type="text" name="emergency_contact" class="form-control" value="{{ form.emergency_contact.value|default:'' }}" placeholder="Nom et téléphone parent">
           </div>
@@ -175,15 +184,13 @@
             <label class="form-label">Date de naissance</label>
             <input type="date" name="date_of_birth" class="form-control" value="{{ form.date_of_birth.value|default:'' }}">
           </div>
+          <div class="col-6">
+            <label class="form-label">Photo d'identité (optionnel)</label>
+            <input type="file" name="identity_photo" class="form-control" accept="image/*">
+          </div>
         </div>
 
-        <div class="section-heading"><span class="step-badge">3</span> Photo d'identité</div>
-        <div>
-          <label class="form-label">Photo (JPG/PNG, max 2 Mo) — optionnel</label>
-          <input type="file" name="identity_photo" class="form-control" accept="image/*">
-        </div>
-
-        <div class="section-heading"><span class="step-badge">4</span> Conditions d'utilisation</div>
+        <div class="section-heading"><span class="step-badge">3</span> Conditions d'utilisation</div>
         <div class="terms-box">
           En utilisant ce système de gestion des absences, vous acceptez que vos données
           personnelles (nom, contacts, présences) soient collectées et utilisées uniquement
@@ -194,11 +201,11 @@
           <input type="checkbox" name="terms_accepted" id="id_terms_accepted"
                  class="form-check-input" {% if form.terms_accepted.value %}checked{% endif %}>
           <label class="form-check-label" for="id_terms_accepted" style="font-size:.88rem;">
-            J'accepte les conditions d'utilisation <span class="text-danger">*</span>
+            J'accepte les conditions d'utilisation <span style="color:var(--burgundy)">*</span>
           </label>
         </div>
         {% if form.terms_accepted.errors %}
-        <div class="text-danger small mt-1">{{ form.terms_accepted.errors.0 }}</div>
+        <div style="color:#EF4444;font-size:.8rem;margin-top:4px;">{{ form.terms_accepted.errors.0 }}</div>
         {% endif %}
       </div>
 
@@ -231,18 +238,97 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  function selectRole(role) {
-    document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
-    document.getElementById('role-' + role).classList.add('selected');
-    document.getElementById('roleInput').value = role;
-    const isStudent = role === 'student';
-    document.getElementById('teacher-fields').style.display = isStudent ? 'none' : '';
-    document.getElementById('student-fields').style.display = isStudent ? '' : 'none';
-    document.getElementById('security-step').textContent = isStudent ? '5' : '3';
-    const cb = document.getElementById('id_terms_accepted');
-    if (cb) cb.required = isStudent;
-  }
-  {% if form.role.value == 'student' %}selectRole('student');{% endif %}
+// ── Sélection du rôle ──
+function selectRole(role) {
+  document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('role-' + role).classList.add('selected');
+  document.getElementById('roleInput').value = role;
+  const isStudent = role === 'student';
+  document.getElementById('teacher-fields').style.display = isStudent ? 'none' : '';
+  document.getElementById('student-fields').style.display = isStudent ? '' : 'none';
+  document.getElementById('security-step').textContent = isStudent ? '4' : '3';
+}
+
+// ── Selects cascade : Filière → Niveau → Groupe ──
+const selectFiliere = document.getElementById('select_filiere');
+const selectNiveau  = document.getElementById('select_niveau');
+const selectGroupe  = document.getElementById('select_groupe');
+
+selectFiliere.addEventListener('change', function () {
+  const filiereId = this.value;
+  // Reset niveau et groupe
+  selectNiveau.innerHTML = '<option value="">— Chargement... —</option>';
+  selectGroupe.innerHTML = '<option value="">— D\'abord choisir niveau —</option>';
+  document.getElementById('step-niveau').classList.add('locked');
+  document.getElementById('step-groupe').classList.add('locked');
+  clearAffectation();
+
+  if (!filiereId) return;
+
+  fetch(`/academic/api/niveaux/${filiereId}/`)
+    .then(r => r.json())
+    .then(data => {
+      selectNiveau.innerHTML = '<option value="">— Choisir un niveau —</option>';
+      data.niveaux.forEach(n => {
+        selectNiveau.innerHTML += `<option value="${n.id}" data-year="${n.year_number}">${n.name}</option>`;
+      });
+      document.getElementById('step-niveau').classList.remove('locked');
+    });
+});
+
+selectNiveau.addEventListener('change', function () {
+  const niveauId = this.value;
+  const yearOption = this.options[this.selectedIndex];
+  selectGroupe.innerHTML = '<option value="">— Chargement... —</option>';
+  document.getElementById('step-groupe').classList.add('locked');
+  clearAffectation();
+
+  if (!niveauId) return;
+
+  // Stocker l'année d'étude
+  document.getElementById('yearInput').value = yearOption.dataset.year || '1';
+
+  fetch(`/academic/api/groupes/${niveauId}/`)
+    .then(r => r.json())
+    .then(data => {
+      selectGroupe.innerHTML = '<option value="">— Choisir un groupe —</option>';
+      data.groupes.forEach(g => {
+        selectGroupe.innerHTML += `<option value="${g.id}" data-name="${g.name}">${g.name} (max ${g.max_students} étudiants)</option>`;
+      });
+      document.getElementById('step-groupe').classList.remove('locked');
+    });
+});
+
+selectGroupe.addEventListener('change', function () {
+  const groupeId = this.value;
+  const groupeOption = this.options[this.selectedIndex];
+
+  if (!groupeId) { clearAffectation(); return; }
+
+  // Remplir les champs cachés
+  document.getElementById('groupeAcademiqueInput').value = groupeId;
+  document.getElementById('groupInput').value = groupeOption.dataset.name || '';
+
+  // Remplir département depuis la filière sélectionnée
+  const filiereText = selectFiliere.options[selectFiliere.selectedIndex].text;
+  const deptName = filiereText.split('—').pop().trim();
+  document.getElementById('departmentInput').value = deptName;
+
+  // Afficher résumé
+  const niveauText = selectNiveau.options[selectNiveau.selectedIndex].text;
+  document.getElementById('summary-text').textContent =
+    `${filiereText} / ${niveauText} / Groupe ${groupeOption.dataset.name}`;
+  document.getElementById('affectation-summary').style.display = '';
+});
+
+function clearAffectation() {
+  document.getElementById('groupeAcademiqueInput').value = '';
+  document.getElementById('groupInput').value = '';
+  document.getElementById('affectation-summary').style.display = 'none';
+}
+
+// Si rechargement avec erreur et rôle étudiant pré-sélectionné
+{% if form.role.value == 'student' %}selectRole('student');{% endif %}
 </script>
 </body>
 </html>

@@ -56,26 +56,43 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
+
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:home')
 
+    # Pré-charger les filières pour le template (selects cascade)
+    from academic.models import Filiere
+    filieres = Filiere.objects.filter(is_active=True).prefetch_related('niveaux__groupes')
+
     form = RegisterForm()
 
     if request.method == 'POST':
-        form = RegisterForm(request.POST)
+        form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
             user.phone = form.cleaned_data.get('phone', '')
             user.save()
 
-            # Create profile based on role
             role = form.cleaned_data['role']
             department = form.cleaned_data.get('department', '')
 
             if role == 'student':
                 from django.utils import timezone
+                from academic.models import Groupe
+
+                # Récupérer le groupe académique sélectionné (ID envoyé par le JS)
+                groupe_id = form.cleaned_data.get('groupe_academique')
+                groupe_obj = None
+                if groupe_id:
+                    try:
+                        groupe_obj = Groupe.objects.select_related('niveau__filiere').get(pk=groupe_id)
+                        # Synchroniser les champs texte depuis le groupe académique
+                        department = groupe_obj.niveau.filiere.name
+                    except Groupe.DoesNotExist:
+                        pass
+
                 profile = StudentProfile.objects.create(
                     user=user,
                     student_id=form.cleaned_data['student_id'],
@@ -86,11 +103,9 @@ def register_view(request):
                     emergency_contact=form.cleaned_data.get('emergency_contact', ''),
                     terms_accepted=True,
                     terms_accepted_at=timezone.now(),
+                    # ✅ NOUVEAU — lier au groupe académique sélectionné
+                    groupe_academique=groupe_obj,
                 )
-                # Sauvegarder la photo si fournie
-                if form.cleaned_data.get('identity_photo'):
-                    profile.identity_photo = form.cleaned_data['identity_photo']
-                    profile.save()
 
             elif role == 'teacher':
                 TeacherProfile.objects.create(
@@ -100,13 +115,13 @@ def register_view(request):
                     specialization=form.cleaned_data.get('specialization', ''),
                 )
 
-            messages.success(request, 'Compte créé avec succès! Vous pouvez maintenant vous connecter.')
+            messages.success(request, 'Compte créé avec succès ! Vous pouvez vous connecter.')
             return redirect('accounts:login')
-        else:
-            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
 
-    return render(request, 'accounts/register.html', {'form': form})
-
+    return render(request, 'accounts/register.html', {
+        'form': form,
+        'filieres': filieres,
+    })
 
 def logout_view(request):
     logout(request)
